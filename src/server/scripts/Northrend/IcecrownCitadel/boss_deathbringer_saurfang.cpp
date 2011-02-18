@@ -246,6 +246,8 @@ class boss_deathbringer_saurfang : public CreatureScript
                 ASSERT(creature->GetVehicleKit()); // we dont actually use it, just check if exists
                 _introDone = false;
                 _fallenChampionCastCount = 0;
+                          me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+                               me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
             }
 
             void Reset()
