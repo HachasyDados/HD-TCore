@@ -85,6 +85,8 @@ class boss_festergut : public CreatureScript
                 _maxInoculatedStack = 0;
                 _inhaleCounter = 0;
                 _gasDummyGUID = 0;
+                                me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+                               me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
             }
 
             void Reset()
