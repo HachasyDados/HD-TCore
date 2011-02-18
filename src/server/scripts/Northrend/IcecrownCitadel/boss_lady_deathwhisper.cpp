@@ -220,8 +220,8 @@ class boss_lady_deathwhisper : public CreatureScript
             boss_lady_deathwhisperAI(Creature* creature) : BossAI(creature, DATA_LADY_DEATHWHISPER),
                 _dominateMindCount(RAID_MODE<uint8>(0, 1, 1, 3)), _introDone(false)
             {
+                me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);                me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
             }
-
             void Reset()
             {
                 _Reset();
