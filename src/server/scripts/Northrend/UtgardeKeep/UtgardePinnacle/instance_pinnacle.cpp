@@ -109,7 +109,11 @@ public:
                 case BOSS_SVALA_SORROWGRAVE:  uiSvalaSorrowgrave = creature->GetGUID();  break;
                 case BOSS_GORTOK_PALEHOOF:    uiGortokPalehoof = creature->GetGUID();    break;
                 case BOSS_SKADI_RUTHLESS:     uiSkadiTheRuthless = creature->GetGUID();  break;
-                case BOSS_KING_YMIRON:        uiKingYmiron = creature->GetGUID();        break;
+                case BOSS_KING_YMIRON:
+                    uiKingYmiron = creature->GetGUID();
+                    creature->SetReactState(REACT_PASSIVE);
+                    creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                    break;
                 case MOB_FRENZIED_WORGEN:     uiFrenziedWorgen = creature->GetGUID();    break;
                 case MOB_RAVENOUS_FURBOLG:    uiRavenousFurbolg = creature->GetGUID();   break;
                 case MOB_MASSIVE_JORMUNGAR:   uiMassiveJormungar = creature->GetGUID();  break;
@@ -251,6 +255,19 @@ public:
 
             OUT_LOAD_INST_DATA_COMPLETE;
         }
+        void Update(uint32 diff){
+
+            if (!instance->HavePlayers())
+                return;
+
+            if ((GetData(DATA_SVALA_SORROWGRAVE_EVENT) == DONE) && (GetData(DATA_GORTOK_PALEHOOF_EVENT) == DONE) && (GetData(DATA_SKADI_THE_RUTHLESS_EVENT) == DONE)) {
+                if(Creature* pYmiron = instance->GetCreature(uiKingYmiron)){
+                    pYmiron->SetReactState(REACT_AGGRESSIVE);
+                    pYmiron->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                }
+            }
+        }
+
     };
 };
 
