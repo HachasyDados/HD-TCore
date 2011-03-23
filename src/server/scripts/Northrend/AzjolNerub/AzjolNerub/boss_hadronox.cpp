@@ -112,34 +112,20 @@ public:
             me->SetInCombatWithZone();
         }
 
-        void CheckDistance(float dist, const uint32 uiDiff)
+        void DamageTaken(Unit* pDone_by, uint32& uiDamage)
         {
-            if (!me->isInCombat())
-                return;
-
-            float x=0.0f, y=0.0f, z=0.0f;
-            me->GetRespawnPosition(x, y, z);
-
-            if (uiCheckDistanceTimer <= uiDiff)
-                uiCheckDistanceTimer = 5*IN_MILLISECONDS;
-            else
-            {
-                uiCheckDistanceTimer -= uiDiff;
+            if (pDone_by && HealthBelowPct(75) && pDone_by->GetTypeId() != TYPEID_PLAYER)
+            {                uiDamage = 0;
                 return;
             }
-            if (me->IsInEvadeMode() || !me->getVictim())
-                return;
-            if (me->GetDistance(x, y, z) > dist)
-                EnterEvadeMode();
         }
-
         void UpdateAI(const uint32 diff)
         {
             //Return since we have no target
             if (!UpdateVictim()) return;
 
             // Without he comes up through the air to players on the bridge after krikthir if players crossing this bridge!
-            CheckDistance(fMaxDistance, diff);
+            //CheckDistance(fMaxDistance, diff);
 
             if (me->HasAura(SPELL_WEB_FRONT_DOORS) || me->HasAura(SPELL_WEB_SIDE_DOORS))
             {
@@ -148,6 +134,9 @@ public:
             }
             else if (!IsCombatMovementAllowed())
                 SetCombatMovement(true);
+
+            if (me->HasUnitState(UNIT_STAT_CASTING))
+                return;
 
             if (uiPierceTimer <= diff)
             {
