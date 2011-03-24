@@ -122,6 +122,8 @@ public:
                     break;
                 case NPC_THARON_JA:
                     uiTharonJa = creature->GetGUID();
+                    creature->SetReactState(REACT_PASSIVE);
+                    creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                     break;
             }
         }
@@ -198,6 +200,18 @@ public:
 
             OUT_SAVE_INST_DATA_COMPLETE;
             return str_data;
+        }
+
+        void Update(uint32 diff)
+        {
+            if (!instance->HavePlayers())
+                return;
+
+            if (GetData(DATA_TROLLGORE_EVENT) == DONE && GetData(DATA_NOVOS_EVENT) == DONE && GetData(DATA_DRED_EVENT) == DONE)
+                if(Creature* pTharonJa = instance->GetCreature(uiTharonJa)){
+                    pTharonJa->SetReactState(REACT_AGGRESSIVE);
+                    pTharonJa->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                }
         }
 
         void Load(const char* in)
