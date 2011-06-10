@@ -883,9 +883,9 @@ public:
             if (!HarpoonerGUID)
                 return;
 
-            if (me->HasAura(SPELL_SUBDUED) && who->GetEntry() == NPC_RAELORASZ)
-            {
-                if (me->IsWithinDistInMap(who, INTERACTION_DISTANCE))
+            //This part isn't working correctcly
+            /*if (me->HasAura(SPELL_SUBDUED) && who->GetEntry() == NPC_RAELORASZ)
+            {                if (me->IsWithinDistInMap(who, INTERACTION_DISTANCE))
                 {
                     if (Player* pHarpooner = Unit::GetPlayer(*me, HarpoonerGUID))
                     {
@@ -896,7 +896,7 @@ public:
                         me->DisappearAndDie();
                     }
                 }
-            }
+            }*/
         }
 
         void UpdateAI(const uint32 /*diff*/)
@@ -913,6 +913,21 @@ public:
 
                     me->AttackStop();
                     WithRedDragonBlood = false;
+                }
+            }
+
+            if (me->HasAura(SPELL_SUBDUED))
+            {
+                if (Creature* pRaelorasz = me->FindNearestCreature(NPC_RAELORASZ, 10.0f))
+                {
+                    if (Player *pHarpooner = GetLeaderForFollower())
+                    {
+                        pHarpooner->KilledMonsterCredit(26175, 0);
+                        pHarpooner->RemoveAura(SPELL_DRAKE_HATCHLING_SUBDUED);
+                        SetFollowComplete();
+                        HarpoonerGUID = 0;
+                        me->DisappearAndDie();
+                    }
                 }
             }
 
