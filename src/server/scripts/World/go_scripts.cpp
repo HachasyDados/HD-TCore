@@ -896,13 +896,26 @@ public:
 };
 
 /*######
-## go_inconspicuous_landmark
+## go_inconspicuous_landmark (142189)
 ######*/
 
 enum eInconspicuousLandmark
 {
     SPELL_SUMMON_PIRATES_TREASURE_AND_TRIGGER_MOB    = 11462,
     ITEM_CUERGOS_KEY                                 = 9275,
+    GO_PIRATES_TREASURE                              = 142194,
+    NPC_TH_BUCANEER                                  = 7902,
+    NPC_TH_PIRATE                                    = 7899,
+    NPC_TH_SWASHBUCKLER                              = 7901
+};
+
+const Position SpawnsLocation[] =
+{
+    {-10278.858398f, -3885.251221f, 1.106929f, 2.862739f}, // pirate 1
+    {-10278.865234f, -3881.008057f, 1.466278f, 3.514619f}, // pirate 2
+    {-10283.445312f, -3875.822266f, 1.624895f, 4.649519f}, // pirate 3
+    {-10290.837891f, -3880.942871f, 0.911992f, 5.984700f}, // pirate 4
+    {-10287.276367f, -3888.869385f, 0.621543f, 1.020983f}  // pirate 5
 };
 
 class go_inconspicuous_landmark : public GameObjectScript
@@ -910,12 +923,19 @@ class go_inconspicuous_landmark : public GameObjectScript
 public:
     go_inconspicuous_landmark() : GameObjectScript("go_inconspicuous_landmark") { }
 
-    bool OnGossipHello(Player* player, GameObject* /*pGO*/)
+    bool OnGossipHello(Player* player, GameObject* pGO)
     {
-        if (player->HasItemCount(ITEM_CUERGOS_KEY, 1))
+        pGO->SummonGameObject(GO_PIRATES_TREASURE,-10282.488281f,-3884.029785f,1.041096f,0,0,0,0,0,180000); // chest
+
+        if (player->HasItemCount(ITEM_CUERGOS_KEY,1))
             return false;
 
-        player->CastSpell(player, SPELL_SUMMON_PIRATES_TREASURE_AND_TRIGGER_MOB, true);
+        player->SummonCreature(NPC_TH_BUCANEER, SpawnsLocation[0], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT , 20000);
+        player->SummonCreature(NPC_TH_PIRATE, SpawnsLocation[1], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+        player->SummonCreature(NPC_TH_SWASHBUCKLER, SpawnsLocation[2], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+        player->SummonCreature(NPC_TH_PIRATE, SpawnsLocation[3], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+        player->SummonCreature(NPC_TH_BUCANEER, SpawnsLocation[4], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+        //player->CastSpell(player,SPELL_SUMMON_PIRATES_TREASURE_AND_TRIGGER_MOB,true); // trigger mob part not working
 
         return true;
     }
