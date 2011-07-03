@@ -519,10 +519,43 @@ public:
 
 };
 
+class npc_ghost_of_azuregos : public CreatureScript
+{
+public:
+    npc_ghost_of_azuregos() : CreatureScript("npc_ghost_of_azuregos") { }
+
+    bool OnGossipHello (Player *player, Creature *creature)
+    {
+        if (player->GetQuestStatus(8575) == QUEST_STATUS_NONE && !player->HasItemCount(20949, 1) && player->GetReputationRank(910) >= REP_NEUTRAL)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Quieres el Libro de contabilidad magico?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+            ItemPosCountVec dest;
+            uint8 canStoreNewItem = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 20949, 1);
+            if (canStoreNewItem == EQUIP_ERR_OK)
+            {
+                Item *newItem = NULL;
+                newItem = player->StoreNewItem(dest, 20949, 1, true);
+                player->SendNewItem(newItem, 1, true, false);
+                player->CLOSE_GOSSIP_MENU();
+            } else
+                creature->MonsterSay("No place!", LANG_UNIVERSAL, player->GetGUID());
+
+            return true;
+    }
+};
+
+
 void AddSC_azshara()
 {
     new mobs_spitelashes();
     new npc_loramus_thalipedes();
     new mob_rizzle_sprysprocket();
     new mob_depth_charge();
+    new npc_ghost_of_azuregos();
 }
