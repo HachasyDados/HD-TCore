@@ -27,5 +27,12 @@ enum eData
     TYPE_NANDOS                 = 4
 };
 
+enum Data64
+{
+    DATA_HUMMEL,
+    DATA_BAXTER,
+    DATA_FRYE
+};
+
 #endif
 
