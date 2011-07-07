@@ -1065,6 +1065,58 @@ public:
     }
 };
 
+/*###################
+# npc_dead_irongiant (29914)
+###################*/
+
+enum IrongiantData
+{
+    QUEST_FORJAR_UNA_CABEZA      = 12985,
+    ITEM_OJO_TRONAFORJADO        = 42423,
+    NPC_EMBOSCADOR_TRONAFORJADO  = 30208
+};
+
+#define GOSSIP_IRONGIANT "<Recuperar ojos tronaforjados>"
+
+class npc_dead_irongiant : public CreatureScript
+{
+public:
+    npc_dead_irongiant() : CreatureScript("npc_dead_irongiant") { }
+
+        bool OnGossipHello(Player* player, Creature* creature)
+        {
+            if (player->GetQuestStatus(QUEST_FORJAR_UNA_CABEZA) == QUEST_STATUS_INCOMPLETE)
+            {
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_IRONGIANT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+                return true;
+            }
+        }
+
+        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+        {
+            player->PlayerTalkClass->ClearMenus();
+
+            if (uiAction ==	GOSSIP_ACTION_INFO_DEF+1)
+            {
+                switch(urand(1,2))
+                {
+                    case 1:
+                        player->AddItem(ITEM_OJO_TRONAFORJADO,2);
+                        player->CLOSE_GOSSIP_MENU();
+                        creature->DespawnOrUnsummon();
+                        break;
+                    case 2:
+                        creature->SummonCreature(NPC_EMBOSCADOR_TRONAFORJADO,creature->GetPositionX(),creature->GetPositionY(),creature->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,10000);
+                        player->CLOSE_GOSSIP_MENU();
+                        creature->DespawnOrUnsummon();
+                        break;
+                }
+            }
+            return true;
+        }
+};
+
 void AddSC_storm_peaks()
 {
     new npc_agnetta_tyrsdottar;
@@ -1083,4 +1135,5 @@ void AddSC_storm_peaks()
     new npc_harnessed_icemaw;
     new npc_hyldsmeet_protodrake_hyd;
     new npc_column_ornament;
+    new npc_dead_irongiant;
 }
