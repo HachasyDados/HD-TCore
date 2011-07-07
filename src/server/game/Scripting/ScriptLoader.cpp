@@ -491,6 +491,12 @@ void AddSC_boss_baltharus_the_warborn();
 void AddSC_boss_saviana_ragefire();
 void AddSC_boss_general_zarithrian();
 
+void AddSC_instance_ruby_sanctum_custom(); // Ruby Sanctum Custom
+void AddSC_boss_baltharus_custom();
+void AddSC_boss_halion_custom();
+void AddSC_boss_ragefire_custom();
+void AddSC_boss_zarithrian_custom();
+
 void AddSC_dalaran();
 void AddSC_borean_tundra();
 void AddSC_dragonblight();
@@ -1195,6 +1201,12 @@ void AddNorthrendScripts()
     AddSC_boss_baltharus_the_warborn();
     AddSC_boss_saviana_ragefire();
     AddSC_boss_general_zarithrian();
+
+    AddSC_instance_ruby_sanctum_custom(); // Ruby Sanctum Custom
+    AddSC_boss_baltharus_custom();
+    AddSC_boss_halion_custom();
+    AddSC_boss_ragefire_custom();
+    AddSC_boss_zarithrian_custom();
 
     AddSC_dalaran();
     AddSC_borean_tundra();
