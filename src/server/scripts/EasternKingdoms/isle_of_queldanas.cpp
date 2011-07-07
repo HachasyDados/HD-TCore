@@ -427,10 +427,45 @@ public:
     };
 
 };
+class npc_sunwell_warder : public CreatureScript
+{
+public:
+    npc_sunwell_warder() : CreatureScript("npc_sunwell_warder") { }
+
+        bool OnGossipHello(Player* player, Creature* creature)
+        {
+            player->PrepareGossipMenu(creature, 0);
+
+                       if (player->HasItemCount(49879, 1) || player->HasItemCount(49889, 1))
+                          player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Llevame a la Fuente del Sol.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+            player->SendPreparedGossip(creature);
+
+            return true;
+        }
+        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+        {
+            player->PlayerTalkClass->ClearMenus();
+
+            switch(uiAction)
+            {
+                case GOSSIP_ACTION_INFO_DEF+1:
+                                   player->CLOSE_GOSSIP_MENU();
+                                   player->SetGameMaster(true);
+                    player->TeleportTo(580, 1728.5f, 709.219f, 71.1905f, 2.78676f);
+                                       player->SetGameMaster(false);
+                                  player->SetPhaseMask(2, true);
+                    break;
+                default:
+                    return false;                                   // nothing defined      -> trinity core handling
+            }
+            return true;                                            // no default handling  -> prevent trinity core handling
+        }
+};
 
 void AddSC_isle_of_queldanas()
 {
     new npc_converted_sentry();
     new npc_greengill_slave();
   new npc_thalorien();
+    new npc_sunwell_warder();
 }
