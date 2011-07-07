@@ -68,6 +68,7 @@ public:
         uint64 Anveena;
         uint64 KalecgosKJ;
         uint32 SpectralPlayers;
+        uint64 QuelDelarIntro;
 
         /** GameObjects **/
         uint64 ForceField;                                      // Kalecgos Encounter
@@ -98,6 +99,7 @@ public:
             Anveena                 = 0;
             KalecgosKJ              = 0;
             SpectralPlayers         = 0;
+            QuelDelarIntro          = 0;
 
             /*** GameObjects ***/
             ForceField  = 0;
@@ -155,6 +157,7 @@ public:
                 case 25608: KilJaedenController = creature->GetGUID(); break;
                 case 26046: Anveena             = creature->GetGUID(); break;
                 case 25319: KalecgosKJ          = creature->GetGUID(); break;
+                case 38056: QuelDelarIntro      = creature->GetGUID(); break;
             }
         }
 
@@ -211,6 +214,7 @@ public:
                 case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController;
                 case DATA_ANVEENA:              return Anveena;
                 case DATA_KALECGOS_KJ:          return KalecgosKJ;
+                case DATA_QUELDELAR_INTRODUCER: return QuelDelarIntro;
                 case DATA_PLAYER_GUID:
                     Player* Target = GetPlayerInMap();
                     return Target->GetGUID();
