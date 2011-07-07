@@ -38,6 +38,9 @@ enum eEnums
     NPC_ADA                 = 3849,
     NPC_ARCHMAGE_ARUGAL     = 4275,
     NPC_ARUGAL_VOIDWALKER   = 4627,
+    NPC_APOTHECARY_HUMMEL   = 36296,
+    NPC_APOTHECARY_BAXTER   = 36565,
+    NPC_APOTHECARY_FRYE     = 36272,
 
     GO_COURTYARD_DOOR       = 18895,                        //door to open when talking to NPC's
     GO_SORCERER_DOOR        = 18972,                        //door to open when Fenrus the Devourer
@@ -74,6 +77,9 @@ public:
         uint64 uiAshGUID;
         uint64 uiAdaGUID;
         uint64 uiArchmageArugalGUID;
+        uint64 uiHummelGUID;
+        uint64 uiBaxterGUID;
+        uint64 uiFryeGUID;
 
         uint64 DoorCourtyardGUID;
         uint64 DoorSorcererGUID;
@@ -105,6 +111,9 @@ public:
                 case NPC_ASH: uiAshGUID = creature->GetGUID(); break;
                 case NPC_ADA: uiAdaGUID = creature->GetGUID(); break;
                 case NPC_ARCHMAGE_ARUGAL: uiArchmageArugalGUID = creature->GetGUID(); break;
+                case NPC_APOTHECARY_HUMMEL: uiHummelGUID = creature->GetGUID(); break;
+                case NPC_APOTHECARY_BAXTER: uiBaxterGUID = creature->GetGUID(); break;
+                case NPC_APOTHECARY_FRYE: uiFryeGUID = creature->GetGUID(); break;
             }
         }
 
@@ -206,6 +215,19 @@ public:
             return 0;
         }
 
+        uint64 GetData64(uint32 id)
+        {
+            switch(id)
+            {
+                case DATA_HUMMEL:
+                    return uiHummelGUID;
+                case DATA_BAXTER:
+                    return uiBaxterGUID;
+                case DATA_FRYE:
+                    return uiFryeGUID;
+            }
+            return NULL;
+        }
         std::string GetSaveData()
         {
             return str_data;
