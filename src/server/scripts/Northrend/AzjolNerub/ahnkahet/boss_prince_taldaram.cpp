@@ -82,8 +82,8 @@ public:
         boss_taldaramAI(Creature* c) : ScriptedAI(c)
         {
             instance = c->GetInstanceScript();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            //me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+            //me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
         uint32 uiBloodthirstTimer;
@@ -179,6 +179,7 @@ public:
                         uiPhaseTimer = 1300;
                         break;
                     case VANISHED:
+                        me->SetVisible(true);
                         if (Unit* pEmbraceTarget = GetEmbraceTarget())
                             DoCast(pEmbraceTarget, SPELL_EMBRACE_OF_THE_VAMPYR);
                         me->GetMotionMaster()->Clear();
@@ -225,7 +226,8 @@ public:
                             if (target_list.size() > 2)
                             {
                                 DoScriptText(RAND(SAY_VANISH_1, SAY_VANISH_2), me);
-                                DoCast(me, SPELL_VANISH);
+                                //DoCast(me, SPELL_VANISH);
+                                me->SetVisible(false);
                                 Phase = JUST_VANISHED;
                                 uiPhaseTimer = 500;
                                 if (Unit* pEmbraceTarget = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
