@@ -56,6 +56,7 @@ enum Data64
 
     /*** Misc ***/
     DATA_PLAYER_GUID,
+    DATA_QUELDELAR_INTRODUCER,
 };
 
 enum Creatures
