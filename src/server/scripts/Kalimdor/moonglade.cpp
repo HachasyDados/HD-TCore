@@ -573,8 +573,101 @@ public:
 };
 
 /*####
-#
+# npc_omen
 ####*/
+
+enum eOmen
+{
+    QUEST_ELUNE_S_BLESSING      = 8868,
+    SPELL_STARFALL              = 37124,
+    SPELL_CLEAVE                = 43273,
+    SPELL_MOONLIGHT             = 26392,
+    SPELL_ELUNE_S_BLESSING      = 26393,
+    SPELL_ELUNE_QUEST_CREDIT    = 26394
+};
+
+class npc_omen : public CreatureScript
+{
+public:
+    npc_omen() : CreatureScript("npc_omen") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_omenAI (creature);
+    }
+
+    struct npc_omenAI : public ScriptedAI
+    {
+        npc_omenAI(Creature *c) : ScriptedAI(c)
+        {
+            me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+            me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
+        }
+
+        uint32 StarfallTimer;
+        uint32 CleaveTimer;
+
+        void Reset()
+        {
+            StarfallTimer = 35000;
+            CleaveTimer = 10000;
+        }
+
+        void JustDied(Unit* /*victim*/)
+        {
+            DoCast(me, SPELL_MOONLIGHT, true);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (!UpdateVictim())
+                return;
+
+            if (StarfallTimer <= diff)
+            {
+                DoCast(me, SPELL_STARFALL, true);
+                StarfallTimer = urand(30000, 40000);
+            }
+            else StarfallTimer -= diff;
+
+            if (CleaveTimer <= diff)
+            {
+                DoCastVictim(SPELL_CLEAVE, true);
+                CleaveTimer = 10000;
+            }
+            else CleaveTimer -= diff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+};
+
+class npc_moonlight : public CreatureScript
+{
+public:
+    npc_moonlight() : CreatureScript("npc_moonlight") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_moonlightAI (creature);
+    }
+
+    struct npc_moonlightAI : public Scripted_NoMovementAI
+    {
+        npc_moonlightAI(Creature *c) : Scripted_NoMovementAI(c)
+        {
+            DoCast(me, SPELL_ELUNE_S_BLESSING, true);
+        }
+
+        void MoveInLineOfSight(Unit *who)
+        {
+            if (who->ToPlayer() && !who->ToPlayer()->isGameMaster() && who->IsWithinDist(me, 20.0f))
+                if (who->ToPlayer()->GetQuestStatus(8868) == QUEST_STATUS_INCOMPLETE)
+                    who->CastSpell(who, SPELL_ELUNE_QUEST_CREDIT, true);
+        }
+    };
+
+};
 
 void AddSC_moonglade()
 {
@@ -583,4 +676,6 @@ void AddSC_moonglade()
     new npc_silva_filnaveth();
     new npc_clintar_dreamwalker();
     new npc_clintar_spirit();
+    new npc_omen();
+    new npc_moonlight();
 }
