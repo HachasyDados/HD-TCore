@@ -204,10 +204,34 @@ public:
     }
 };
 
+/*######################
+# Quest 9689 - Razormaw
+#######################*/
+
+class go_razormaw_pyre : public GameObjectScript
+{
+public:
+    go_razormaw_pyre() : GameObjectScript("go_razormaw_pyre") { }
+
+    enum RazormawData
+    {
+        QUEST_RAZORMAW              = 9689,
+        NPC_RAZORMAW                = 17592,
+    };
+
+    bool OnGossipHello(Player *player, GameObject* /*pGO*/)
+    {
+        if (player->GetQuestStatus(QUEST_RAZORMAW) == QUEST_STATUS_INCOMPLETE)
+            player->SummonCreature(NPC_RAZORMAW,-1230.449341f,-12456.349609f,95.382370f,0.323573f,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,30000);
+            return true;
+    }
+};
+
 void AddSC_bloodmyst_isle()
 {
     new mob_webbed_creature();
     new npc_captured_sunhawk_agent();
     new npc_princess_stillpine();
     new go_princess_stillpines_cage();
+    new go_razormaw_pyre();
 }
