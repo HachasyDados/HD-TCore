@@ -251,10 +251,29 @@ public:
     }
 };
 
+/*###################################
+# item_emblazoned_battle_horn (36864)
+####################################*/
+
+class item_emblazoned_battle_horn : public ItemScript
+{
+    public:
+
+        item_emblazoned_battle_horn() : ItemScript("item_emblazoned_battle_horn") { }
+
+        bool OnUse(Player* player, Item* /*item*/, SpellCastTargets const& /*targets*/)
+        {
+            if (player->GetQuestStatus(12151) == QUEST_STATUS_INCOMPLETE)
+                player->SummonCreature(27002,2713.821045f,445.447998f,67.814095f,5.241539f,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,30000);
+                return true;
+        }
+};
+
 
 void AddSC_dragonblight()
 {
     new npc_alexstrasza_wr_gate;
     new npc_hourglass;
     new npc_ws_battle_standard;
+    new item_emblazoned_battle_horn;
 }
