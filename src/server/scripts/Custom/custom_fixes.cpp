@@ -77,8 +77,62 @@ class item_alumeths_remains : public ItemScript
         }
 };
 
+/*##################################
+# npc_q13355_q13320_trigger (97001)
+###################################*/
+
+class npc_q13355_q13320_trigger : public CreatureScript
+{
+public:
+    npc_q13355_q13320_trigger() : CreatureScript("npc_q13355_q13320_trigger") { }
+
+    enum q13355q13320TriggerData
+    {
+        GO_TEMP_CULTISTS_CAULDRON = 300240,
+        BLUE_CAULDRON_GUID = 99719,
+        BLACK_CAULDRON_GUID = 99718,
+        GREEN_CAULDRON_GUID = 99720,
+        BLUE_SAMPLE_KC = 32242,
+        BLACK_SAMPLE_KC = 32245,
+        GREEN_SAMPLE_KC = 32244,
+        SPELL_COLLECT_SAMPLE = 60256
+    };
+
+    struct npc_q13355_q13320_triggerAI : public ScriptedAI
+    {
+        npc_q13355_q13320_triggerAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void Reset() {}
+
+        void SpellHit(Unit* caster, const SpellInfo* spell)
+        {
+            if (caster->GetTypeId() != TYPEID_PLAYER)
+                return;
+
+            if (caster->GetTypeId() == TYPEID_PLAYER && spell->Id == SPELL_COLLECT_SAMPLE)
+            {
+                if (GameObject* go = me->FindNearestGameObject(GO_TEMP_CULTISTS_CAULDRON,10.0f))
+                {
+                    switch(go->GetGUIDLow())
+                    {
+                        case BLUE_CAULDRON_GUID: caster->ToPlayer()->KilledMonsterCredit(BLUE_SAMPLE_KC,0); break;
+                        case BLACK_CAULDRON_GUID: caster->ToPlayer()->KilledMonsterCredit(BLACK_SAMPLE_KC,0); break;
+                        case GREEN_CAULDRON_GUID: caster->ToPlayer()->KilledMonsterCredit(GREEN_SAMPLE_KC,0); break;
+                    }
+                }
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_q13355_q13320_triggerAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
     new item_alumeths_remains;
+    new npc_q13355_q13320_trigger;
 }
