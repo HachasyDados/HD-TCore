@@ -2666,6 +2666,62 @@ public:
     }
 };
 
+/*##########################
+## npc_fallen_caravan_guard - quest fix 11593 and 11658
+###########################*/
+
+#define GOSSIP_ITEM_GUARD_1 "Search the body for the guard's outfit"
+#define GOSSIP_ITEM_GUARD_2 "Burn corpse to purify its soul"
+
+class npc_fallen_caravan_guard : public CreatureScript
+{
+public:
+    npc_fallen_caravan_guard() : CreatureScript("npc_fallen_caravan_guard") { }
+
+    enum FallenCaravanData
+    {
+        QUEST_PLAN_B = 11658,
+        QUEST_THE_HONORED_DEAD = 11593,
+        ITEM_WARSONG_OUTFIT = 34842,
+        SPELL_RAGEFIST_TORCH = 45474,
+        GOSSIP_TEXT_GUARD = 12388,
+        NPC_BURNED_CORPSE_KC = 25342
+    };
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+        if (player->GetQuestStatus(QUEST_PLAN_B) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GUARD_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+        if (player->GetQuestStatus(QUEST_THE_HONORED_DEAD) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GUARD_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+
+        player->PlayerTalkClass->SendGossipMenu(GOSSIP_TEXT_GUARD, creature->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->PlayerTalkClass->ClearMenus();
+
+        switch (uiAction)
+        {
+            case GOSSIP_ACTION_INFO_DEF+1:
+                player->AddItem(ITEM_WARSONG_OUTFIT,1);
+                break;
+            case GOSSIP_ACTION_INFO_DEF+2:
+                player->CastSpell(creature,SPELL_RAGEFIST_TORCH,false);
+                player->KilledMonsterCredit(NPC_BURNED_CORPSE_KC,0);
+                break;
+        }
+
+        player->CLOSE_GOSSIP_MENU();
+        creature->DespawnOrUnsummon();
+
+        return true;
+    }
+};
+
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit;
@@ -2697,4 +2753,5 @@ void AddSC_borean_tundra()
     new npc_hidden_cultist;
     new npc_recon_pilot;
     new npc_q11796_trigger;
+    new npc_fallen_caravan_guard;
 }
