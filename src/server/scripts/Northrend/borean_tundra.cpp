@@ -208,7 +208,8 @@ enum eKeristrasza
     SPELL_TELEPORT_TO_SARAGOSA = 46772
 };
 
-#define GOSSIP_HELLO_KERI   "I am prepared to face Saragosa!"
+#define GOSSIP_HELLO_KERI   "Estoy preparado para enfrentarme a Saragosa!"
+#define GOSSIP_HELLO_KERI_COMPLETE "Llevame de vuelta al Saliente Ambar."
 
 class npc_keristrasza : public CreatureScript
 {
@@ -223,6 +224,9 @@ public:
         if (player->GetQuestStatus(11957) == QUEST_STATUS_INCOMPLETE)
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HELLO_KERI, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
+       if (player->GetQuestStatus(11957) == QUEST_STATUS_COMPLETE)
+           player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HELLO_KERI_COMPLETE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
 
         return true;
@@ -235,6 +239,12 @@ public:
         {
             player->CLOSE_GOSSIP_MENU();
             player->CastSpell(player, SPELL_TELEPORT_TO_SARAGOSA, true);
+        }
+
+        if (uiAction == GOSSIP_ACTION_INFO_DEF + 2)
+        {
+            player->CLOSE_GOSSIP_MENU();
+            player->TeleportTo(571, 3600.0f, 5955.0f, 136.2f, 0);
         }
 
         return true;
