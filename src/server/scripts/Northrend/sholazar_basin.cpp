@@ -851,6 +851,217 @@ public:
     }
 };
 
+enum stillEvents
+{
+    EVENT_BANANA_CLICK,
+    EVENT_ORANGE_CLICK,
+    EVENT_PAPAYA_CLICK,
+    EVENT_VALVE_CLICK,
+    EVENT_BRAZIER_CLICK
+};
+
+class go_still_tools : public GameObjectScript
+{
+public:
+    go_still_tools(): GameObjectScript("go_still_tools") {}
+
+        bool OnGossipHello(Player* player, GameObject* go)
+        {
+            if (Creature *pTipsy = go->FindNearestCreature(28566, 15.0f))
+            {
+                switch(go->GetEntry())
+                {
+                    case 190639: // Barrel of Papayas
+                        pTipsy->AI()->DoAction(EVENT_PAPAYA_CLICK);
+                        break;
+                    case 190638: // Barrel of Bananas
+                        pTipsy->AI()->DoAction(EVENT_BANANA_CLICK);
+                        break;
+                    case 190637: //Barrel of Oranges
+                        pTipsy->AI()->DoAction(EVENT_ORANGE_CLICK);
+                        break;
+                    case 190636: // Brazier
+                        pTipsy->AI()->DoAction(EVENT_BRAZIER_CLICK);
+                        break;
+                    case 190635: // Preassure Valve
+                        pTipsy->AI()->DoAction(EVENT_VALVE_CLICK);
+                        break;
+                }
+            }
+            return true;
+        }
+};
+
+#define GOSSIP_ITEM_TIPSY "Comencemos la destilacion."
+
+class npc_tipsy_gossip : public CreatureScript
+{
+public:
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_tipsy_gossipAI (creature);
+    }
+
+    npc_tipsy_gossip() : CreatureScript("npc_tipsy_gossip") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+
+        if (player->GetQuestStatus(12644) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_TIPSY, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->CLOSE_GOSSIP_MENU();
+        creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+        creature->AI()->SetGUID(player->GetGUID());
+        return true;
+    }
+    struct npc_tipsy_gossipAI : public ScriptedAI
+    {
+        npc_tipsy_gossipAI(Creature* creature) : ScriptedAI(creature) { }
+
+        uint8 uiStep;
+        uint32 uiTimer;
+        bool bStarted;
+        enum States
+        {
+            NONE     = 0,
+            BANANA   = 1,
+            ORANGE   = 2,
+            PAPAYA   = 3,
+            VALVE    = 4,
+            BRAZIER  = 5,
+        };
+        uint8 nextExpectedClick;
+        uint64 uiPlayer;
+
+        void SetGUID(const uint64 &uiGuid, int32 /*iId*/)
+        {
+            uiPlayer = uiGuid;
+            bStarted = true;
+            me->MonsterSay("Muy bien, vamos alla. Yo te dire lo que necesitamos y tu me lanzaras. Preparate!", LANG_UNIVERSAL, uiPlayer);
+            uiTimer = urand(2000, 4000);
+            nextExpectedClick = NONE;
+        }
+        void FinishedStill()
+        {
+            if (Player* player = me->GetPlayer(*me, uiPlayer))
+                player->AddItem(38688, 1);
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->MonsterSay("Hemos terminado, buen trabajo.", LANG_UNIVERSAL, uiPlayer);
+            bStarted = false;
+            uiStep = 0;
+            nextExpectedClick = NONE;
+
+        }
+
+        void FailedStill()
+        {
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->MonsterSay("Acabas de estropear la mezcla! Tendremos que volver a empezar.", LANG_UNIVERSAL, uiPlayer);
+            bStarted = false;
+            uiStep = 0;
+            nextExpectedClick = NONE;
+        }
+
+        void CorrectClick()
+        {
+            if (nextExpectedClick != VALVE) uiStep++;
+            nextExpectedClick = NONE;
+        }
+
+        void DoAction(const int32 actionId)
+        {
+            if (bStarted)
+                switch(actionId)
+                {
+                    case EVENT_BANANA_CLICK:
+                        if(nextExpectedClick == BANANA) CorrectClick();
+                        else FailedStill();
+                        break;
+
+                    case EVENT_ORANGE_CLICK:
+                        if(nextExpectedClick == ORANGE) CorrectClick();
+                        else FailedStill();
+                        break;
+
+                    case EVENT_PAPAYA_CLICK:
+                        if(nextExpectedClick == PAPAYA) CorrectClick();
+                        else FailedStill();
+                        break;
+
+                    case EVENT_VALVE_CLICK:
+                        if(nextExpectedClick == VALVE) CorrectClick();
+                        else FailedStill();
+                        break;
+
+                    case EVENT_BRAZIER_CLICK:
+                        if(nextExpectedClick == BRAZIER) CorrectClick();
+                        else FailedStill();
+                        break;
+                }
+        }
+
+        void GenerateNextRandom()
+        {
+            switch(urand(1,4))
+            {
+                case 1:
+                    me->MonsterSay("Necesitamos platanos, deprisa!", LANG_UNIVERSAL, uiPlayer);
+                    nextExpectedClick = BANANA;
+                    break;
+                case 2:
+                    me->MonsterSay("Naranjas, naranjas Rapido!", LANG_UNIVERSAL, uiPlayer);
+                    nextExpectedClick = ORANGE;
+                    break;
+                case 3:
+                    me->MonsterSay("Papayas, necesitamos mas papayas.", LANG_UNIVERSAL, uiPlayer);
+                    nextExpectedClick = PAPAYA;
+                    break;
+                case 4:
+                    me->MonsterSay("La presion esta subiendo demiasiado! Solucionalo ya!", LANG_UNIVERSAL, uiPlayer);
+                    nextExpectedClick = VALVE;
+                    break;
+            }
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            if (bStarted)
+            {
+                if (uiTimer <= uiDiff)
+                {
+                   if(nextExpectedClick != NONE)
+                   {FailedStill(); return;}
+
+                   if(uiStep < 6)
+                   {
+                       GenerateNextRandom();
+                       uiTimer = urand(3000,5000);
+                   }
+                   else if (uiStep == 6)
+                   {
+                       nextExpectedClick = BRAZIER;
+                       me->MonsterSay("Calientalo y habremos terminado.", LANG_UNIVERSAL, uiPlayer);
+                       uiTimer = urand(3000,5000);
+                   }
+                   else
+                       FinishedStill();
+                }
+                else
+                {
+                uiTimer -= uiDiff;
+                }
+            }
+        }
+    };
+};
 void AddSC_sholazar_basin()
 {
     new npc_injured_rainspeaker_oracle();
@@ -863,4 +1074,6 @@ void AddSC_sholazar_basin()
     new npc_captive_croco_gossip();
     new npc_captive_croco_vehicle();
     new npc_harkek_gossip();
+    new go_still_tools();
+    new npc_tipsy_gossip();
 }
