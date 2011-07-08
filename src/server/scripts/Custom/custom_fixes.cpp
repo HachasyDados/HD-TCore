@@ -1113,6 +1113,116 @@ public:
     };
 };
 
+enum ironRuneConstructData
+{
+    QUEST_IRON_RUNE_CONST_JUMP  = 11485,
+    QUEST_IRON_RUNE_CONST_DATA  = 11489,
+    QUEST_IRON_RUNE_CONST_BLUFF = 11491,
+
+    NPC_IRON_RUNE_CONST_JUMP    = 24823,
+    NPC_IRON_RUNE_CONST_DATA    = 24821,
+    NPC_IRON_RUNE_CONST_BLUFF   = 24825,
+
+    SPELL_BLUFF                 = 44562,
+};
+
+class npc_iron_rune_construct : public CreatureScript
+{
+public:
+    npc_iron_rune_construct() : CreatureScript("npc_iron_rune_construct") { }
+
+    struct npc_iron_rune_constructAI : public ScriptedAI
+    {
+        npc_iron_rune_constructAI(Creature* creature) : ScriptedAI(creature) { }
+
+        bool ocuppied;
+        uint8 seatID;
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            Unit* player = me->GetVehicleKit()->GetPassenger(seatID);
+
+            if (!player)
+                me->DisappearAndDie();
+        }
+
+        void PassengerBoarded(Unit* passenger, int8 seatId, bool /*apply*/)
+        {
+            seatID = seatId;
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_iron_rune_constructAI(creature);
+    }
+};
+
+class npc_lebronski : public CreatureScript
+{
+public:
+    npc_lebronski() : CreatureScript("npc_lebronski") { }
+
+    struct npc_lebronskiAI : public ScriptedAI
+    {
+        npc_lebronskiAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void SpellHit(Unit* caster, SpellInfo const* spell)
+        {
+            if(spell->Id == SPELL_BLUFF)
+                caster->GetVehicleKit()->GetPassenger(0)->ToPlayer()->GroupEventHappens(QUEST_IRON_RUNE_CONST_BLUFF, me);
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_lebronskiAI(creature);
+    }
+};
+
+class go_iron_rune_construct_workbank : public GameObjectScript
+{
+    public:
+        go_iron_rune_construct_workbank() : GameObjectScript("go_iron_rune_construct_workbank") { }
+
+        bool OnGossipHello(Player* player, GameObject* go)
+        {
+            if (player->GetQuestStatus(QUEST_IRON_RUNE_CONST_JUMP) == QUEST_STATUS_INCOMPLETE)
+            {
+                if(Creature* pConstruct = player->SummonCreature(NPC_IRON_RUNE_CONST_JUMP, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation()))
+                {
+                    pConstruct->SetLevel(player->getLevel());
+                    player->EnterVehicle(pConstruct);
+                    player->GroupEventHappens(QUEST_IRON_RUNE_CONST_JUMP, pConstruct);
+                }
+                return true;
+            }
+
+            if (player->GetQuestStatus(QUEST_IRON_RUNE_CONST_DATA) == QUEST_STATUS_INCOMPLETE)
+            {
+                if(Creature* pConstruct = player->SummonCreature(NPC_IRON_RUNE_CONST_DATA, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation()))
+                {
+                    pConstruct->SetLevel(player->getLevel());
+                    player->EnterVehicle(pConstruct);
+                }
+                return true;
+            }
+
+            if (player->GetQuestStatus(QUEST_IRON_RUNE_CONST_BLUFF) == QUEST_STATUS_INCOMPLETE)
+            {
+                if(Creature* pConstruct = player->SummonCreature(NPC_IRON_RUNE_CONST_BLUFF, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation()))
+                {
+                    pConstruct->SetLevel(player->getLevel());
+                    player->EnterVehicle(pConstruct);
+                }
+                return true;
+            }
+
+            return true;
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1131,4 +1241,7 @@ void AddSC_custom_fixes()
     new npc_ancient_vrykul();
     new at_ymiron_house();
     new npc_lich_king_hfjord();
+    new npc_iron_rune_construct();
+    new npc_lebronski();
+    new go_iron_rune_construct_workbank();
 }
