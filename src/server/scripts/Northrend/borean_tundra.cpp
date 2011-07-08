@@ -2740,6 +2740,25 @@ class item_snq_control_unit : public ItemScript
         }
 };
 
+/*###################################
+# item_interdimensional_refabricator (35479)
+####################################*/
+
+class item_interdimensional_refabricator : public ItemScript
+{
+    public:
+
+        item_interdimensional_refabricator() : ItemScript("item_interdimensional_refabricator") { }
+
+        bool OnUse(Player* player, Item* /*item*/, SpellCastTargets const& /*targets*/)
+        {
+            if (player->GetQuestStatus(11905) == QUEST_STATUS_INCOMPLETE)
+                player->CastSpell(player,46547,false);
+                player->KilledMonsterCredit(26105,0);
+                return true;
+        }
+};
+
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit;
@@ -2773,4 +2792,5 @@ void AddSC_borean_tundra()
     new npc_q11796_trigger;
     new npc_fallen_caravan_guard;
     new item_snq_control_unit;
+    new item_interdimensional_refabricator;
 }
