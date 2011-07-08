@@ -842,6 +842,43 @@ public:
     };
 };
 
+enum ancientSkullPileData
+{
+    ITEM_TIMELOST_OFFERING = 32720,
+    NPC_TEROKK             = 21838,
+};
+
+class go_ancient_skull_pile : public GameObjectScript
+{
+    public:
+        go_ancient_skull_pile() : GameObjectScript("go_ancient_skull_pile") { }
+
+        bool OnGossipHello(Player* player, GameObject* go)
+        {
+            if (player->HasItemCount(ITEM_TIMELOST_OFFERING, 1))
+                player->ADD_GOSSIP_ITEM( 9, "Invocar a Terokk", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+            player->SEND_GOSSIP_MENU(player->GetGossipTextId(go), go->GetGUID());
+            return true;
+        }
+
+        bool OnGossipSelect(Player* player, GameObject* go, uint32 /*uiSender*/, uint32 uiAction)
+        {
+            if(uiAction = GOSSIP_ACTION_INFO_DEF+1)
+            {
+                if(Creature* pTerokk = player->SummonCreature(NPC_TEROKK, go->GetPositionX() + 4.0f, go->GetPositionY() + 2.0f, go->GetPositionZ(), go->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
+                {
+                    pTerokk->AI()->AttackStart(player);
+                    pTerokk->GetMotionMaster()->Clear();
+                    pTerokk->GetMotionMaster()->MoveChase(player);
+                    player->DestroyItemCount(ITEM_TIMELOST_OFFERING, 1, true);
+                }
+            }
+            player->CLOSE_GOSSIP_MENU();
+            return true;
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -856,4 +893,5 @@ void AddSC_custom_fixes()
     new npc_decomposing_ghoul();
     new npc_irulon_trueblade();
     new npc_banner_q11429();
+    new go_ancient_skull_pile();
 }
