@@ -49,7 +49,36 @@ public:
     }
 };
 
+/*#############################
+# item_alumeths_remains (44480)
+###############################*/
+
+class item_alumeths_remains : public ItemScript
+{
+    public:
+
+        item_alumeths_remains() : ItemScript("item_alumeths_remains") { }
+
+        enum AlumethsRemainsData
+        {
+            QUEST_NO_REST_FOR_THE_WICKED_A = 13346,
+            QUEST_NO_REST_FOR_THE_WICKED_H = 13367,
+            QUEST_NO_REST_FOR_THE_WICKED_A_D = 13350,
+            QUEST_NO_REST_FOR_THE_WICKED_H_D = 13368,
+            NPC_ALUMETH = 32300
+        };
+
+        bool OnUse(Player* player, Item* /*item*/, SpellCastTargets const& /*targets*/)
+        {
+            if (player->GetQuestStatus(QUEST_NO_REST_FOR_THE_WICKED_A) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_NO_REST_FOR_THE_WICKED_H) == QUEST_STATUS_INCOMPLETE ||
+                player->GetQuestStatus(QUEST_NO_REST_FOR_THE_WICKED_A_D) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_NO_REST_FOR_THE_WICKED_H_D) == QUEST_STATUS_INCOMPLETE)
+                player->SummonCreature(NPC_ALUMETH,8229.606445f,2179.215820f,499.736694f,3.161045f,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,30000);
+                return true;
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
+    new item_alumeths_remains;
 }
