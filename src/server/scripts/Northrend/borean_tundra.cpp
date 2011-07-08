@@ -2722,6 +2722,24 @@ public:
     }
 };
 
+/*#####################
+# item_snq_control_unit (34981)
+#######################*/
+
+class item_snq_control_unit : public ItemScript
+{
+    public:
+
+        item_snq_control_unit() : ItemScript("item_snq_control_unit") { }
+
+        bool OnUse(Player* player, Item* /*item*/, SpellCastTargets const& /*targets*/)
+        {
+            if (player->GetQuestStatus(11723) == QUEST_STATUS_INCOMPLETE)
+                player->SummonCreature(25629,3511.959961f,4527.180176f,-12.994900f,0.357893f,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,30000);
+                return true;
+        }
+};
+
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit;
@@ -2754,4 +2772,5 @@ void AddSC_borean_tundra()
     new npc_recon_pilot;
     new npc_q11796_trigger;
     new npc_fallen_caravan_guard;
+    new item_snq_control_unit;
 }
