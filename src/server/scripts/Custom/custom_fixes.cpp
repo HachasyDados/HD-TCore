@@ -298,6 +298,182 @@ public:
     }
 };
 
+/*###########################
+# npc_father_kamaros (31279)
+###########################*/
+
+enum NotDeadYet
+{
+    QUEST_NOT_DEAD_YET_A = 13221,
+    QUEST_NOT_DEAD_YET_H = 13229,
+    NPC_NOT_DEAD_YET_TRIG = 97002,
+    SPELL_PW_FORTITUDE = 23947,
+    SPELL_PW_SHIELD = 20697
+};
+
+const Position KamarosWp[54] =
+{
+    {6718.48f, 3439.88f, 682.24f, 0.00f},
+    {6723.54f, 3433.79f, 682.20f, 0.00f},
+    {6734.04f, 3436.02f, 682.03f, 0.00f},
+    {6737.66f, 3439.00f, 680.97f, 0.00f},
+    {6742.07f, 3442.76f, 679.93f, 0.00f},
+    {6745.65f, 3446.09f, 678.85f, 0.00f},
+    {6750.47f, 3450.57f, 677.51f, 0.00f},
+    {6755.94f, 3455.28f, 675.78f, 0.00f},
+    {6759.58f, 3458.61f, 674.71f, 0.00f},
+    {6765.04f, 3463.30f, 673.37f, 0.00f},
+    {6769.22f, 3467.40f, 673.00f, 0.00f},
+    {6771.95f, 3471.55f, 673.01f, 0.00f},
+    {6777.21f, 3477.04f, 672.99f, 0.00f},
+    {6782.91f, 3482.89f, 674.34f, 0.00f},
+    {6779.54f, 3479.36f, 673.32f, 0.00f},
+    {6773.88f, 3473.81f, 673.03f, 0.00f},
+    {6786.32f, 3484.85f, 675.62f, 0.00f},
+    {6792.51f, 3484.66f, 677.20f, 0.00f},
+    {6797.39f, 3484.49f, 678.76f, 0.00f},
+    {6800.64f, 3484.44f, 680.03f, 0.00f},
+    {6805.98f, 3484.26f, 682.17f, 0.00f},
+    {6810.80f, 3484.14f, 683.97f, 0.00f},
+    {6816.15f, 3483.58f, 686.18f, 0.00f},
+    {6822.91f, 3483.01f, 688.17f, 0.00f},
+    {6829.09f, 3481.91f, 689.49f, 0.00f},
+    {6836.49f, 3480.96f, 690.69f, 0.00f},
+    {6844.57f, 3480.25f, 691.89f, 0.00f},
+    {6853.38f, 3479.60f, 692.98f, 0.00f},
+    {6859.95f, 3479.59f, 693.60f, 0.00f},
+    {6867.60f, 3479.74f, 694.21f, 0.00f},
+    {6875.25f, 3479.95f, 694.86f, 0.00f},
+    {6882.69f, 3480.14f, 695.82f, 0.00f},
+    {6889.85f, 3479.97f, 697.36f, 0.00f},
+    {6896.19f, 3479.88f, 698.54f, 0.00f},
+    {6902.49f, 3479.66f, 699.74f, 0.00f},
+    {6908.08f, 3479.89f, 700.81f, 0.00f},
+    {6913.89f, 3480.32f, 701.86f, 0.00f},
+    {6920.57f, 3482.18f, 703.10f, 0.00f},
+    {6925.61f, 3481.11f, 704.38f, 0.00f},
+    {6930.92f, 3480.19f, 705.91f, 0.00f},
+    {6936.04f, 3479.73f, 707.06f, 0.00f},
+    {6942.06f, 3479.21f, 708.06f, 0.00f},
+    {6947.22f, 3477.91f, 709.01f, 0.00f},
+    {6953.44f, 3477.53f, 709.63f, 0.00f},
+    {6959.23f, 3477.21f, 710.30f, 0.00f},
+    {6967.35f, 3474.84f, 711.05f, 0.00f},
+    {6980.54f, 3470.97f, 710.86f, 0.00f},
+    {6985.85f, 3469.15f, 708.75f, 0.00f},
+    {6991.36f, 3467.22f, 705.94f, 0.00f},
+    {6997.30f, 3465.15f, 702.91f, 0.00f},
+    {7004.14f, 3462.46f, 699.36f, 0.00f},
+    {7009.42f, 3460.61f, 696.67f, 0.00f},
+    {7018.43f, 3455.71f, 696.67f, 0.00f},
+    {7029.21f, 3447.94f, 696.17f, 0.00f}
+};
+
+class npc_father_kamaros : public CreatureScript
+{
+public:
+    npc_father_kamaros() : CreatureScript("npc_father_kamaros") { }
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest)
+    {
+        if (quest->GetQuestId() == QUEST_NOT_DEAD_YET_A || quest->GetQuestId() == QUEST_NOT_DEAD_YET_H)
+        {
+            creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            creature->AI()->SetGUID(player->GetGUID());
+            creature->CastSpell(player,SPELL_PW_FORTITUDE,true);
+            player->CastSpell(player,SPELL_PW_SHIELD,true);
+        }
+        return true;
+    }
+
+    struct npc_father_kamarosAI : public ScriptedAI
+    {
+        npc_father_kamarosAI(Creature* creature) : ScriptedAI(creature) { }
+
+        uint8 count;
+        bool wp_reached;
+        bool movementStarted;
+        bool finished;
+        uint64 uiPlayer;
+        Player* player;
+
+        void SetGUID(const uint64 &uiGuid, int32 /*iId*/)
+        {
+            movementStarted = true;
+            me->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_OOC_NOT_ATTACKABLE);
+            me->SetReactState(REACT_PASSIVE);
+            me->SetUnitMovementFlags(MOVEMENTFLAG_WALKING);
+            me->GetMotionMaster()->MovePoint(0, KamarosWp[0]);
+            uiPlayer = uiGuid;
+        }
+
+        void Reset()
+        {
+            count = 0;
+            wp_reached = false;
+            movementStarted = false;
+            finished = false;
+            uiPlayer = 0;
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if (type != POINT_MOTION_TYPE || id != count)
+                return;
+
+            if (movementStarted && id < 54)
+            {
+                ++count;
+                wp_reached = true;
+            }
+        }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            if (movementStarted)
+            {
+                player = me->GetPlayer(*me, uiPlayer);
+
+                if (!player || !player->isAlive() || me->GetDistance(player) > 30.0f)
+                    me->DisappearAndDie();
+
+                if (player->isInCombat() && player->GetUInt64Value(UNIT_FIELD_TARGET))
+                    me->Attack(me->GetUnit(*me, player->GetUInt64Value(UNIT_FIELD_TARGET)), true);
+            }
+
+            if (wp_reached && !finished)
+            {
+                wp_reached = false;
+                me->SetUnitMovementFlags(MOVEMENTFLAG_WALKING);
+                me->GetMotionMaster()->MovePoint(count, KamarosWp[count]);
+            }
+        }
+
+        void MoveInLineOfSight(Unit* who)
+        {
+            if (who->GetEntry() == NPC_NOT_DEAD_YET_TRIG && me->IsWithinDistInMap(who,10.0f,true))
+            {
+                if (Player* player = me->GetPlayer(*me, uiPlayer))
+                {
+                    switch (player->GetTeam())
+                    {
+                        case ALLIANCE: player->GroupEventHappens(QUEST_NOT_DEAD_YET_A, me); break;
+                        case HORDE: player->GroupEventHappens(QUEST_NOT_DEAD_YET_H, me); break;
+                    }
+                    movementStarted = false;
+                    finished = true;
+                    me->DespawnOrUnsummon(10000);
+                }
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_father_kamarosAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -307,4 +483,5 @@ void AddSC_custom_fixes()
     new npc_shredders_taker;
     new item_writhing_mass;
     new npc_rocket_warhead;
+    new npc_father_kamaros;
 }
