@@ -69,7 +69,99 @@ public:
     }
 };
 
+/*######
+## npc_hourglass_of_eternity
+######*/
+/*Support for 'Future you' is currently missing*/
+enum HourglassData
+{
+    NPC_INFINITE_CHRONO_MAGUS    = 27898,
+    NPC_INFINITE_ASSAILANT       = 27896,
+    NPC_INFINITE_DESTROYER       = 27897,
+    NPC_INFINITE_TIMERENDER      = 27900
+};
+
+class npc_hourglass : public CreatureScript
+{
+public:
+    npc_hourglass() : CreatureScript("npc_hourglass") {}
+
+    struct npc_hourglassAI : public ScriptedAI
+    {
+        npc_hourglassAI(Creature* creature) : ScriptedAI(creature) { Reset(); }
+
+        uint64 uiWaveTimer;
+        uint32 uiWaveCounter;
+
+        void Reset()
+        {
+            uiWaveTimer = 5000;
+            uiWaveCounter = 0;
+        }
+
+        void JustSummoned(Creature* pSummoned)
+        {
+            pSummoned->AI()->AttackStart(me);
+        }
+
+        void SummonWave()
+        {
+        switch(uiWaveCounter)
+            {
+            case 0: me->SummonCreature(NPC_INFINITE_CHRONO_MAGUS, me->GetPositionX()+5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_ASSAILANT, me->GetPositionX()-5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    break;
+            case 1: me->SummonCreature(NPC_INFINITE_CHRONO_MAGUS, me->GetPositionX()+5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_CHRONO_MAGUS, me->GetPositionX()-5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    break;
+            case 2: me->SummonCreature(NPC_INFINITE_CHRONO_MAGUS, me->GetPositionX()+5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_ASSAILANT, me->GetPositionX()-5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_DESTROYER, me->GetPositionX()+5,me->GetPositionY()+5 ,me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    break;
+            case 3: me->SummonCreature(NPC_INFINITE_CHRONO_MAGUS, me->GetPositionX()+5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_ASSAILANT, me->GetPositionX()-5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    me->SummonCreature(NPC_INFINITE_DESTROYER, me->GetPositionX()+5,me->GetPositionY()+5 ,me->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    break;
+            case 4: me->SummonCreature(NPC_INFINITE_TIMERENDER, me->GetPositionX()+5,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 300000);
+                    break;
+            }
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            if (uiWaveTimer <= uiDiff)
+            {
+                if(uiWaveCounter<=4)
+                {
+                    SummonWave();
+                    uiWaveTimer = 15000;
+                    uiWaveCounter++;
+                }
+                else me->DespawnOrUnsummon();
+
+            } else uiWaveTimer -= uiDiff;
+        }
+
+        void JustDied()
+        {
+            if(Player* player = me->GetOwner()->ToPlayer())
+            {
+                player->FailQuest(12470);
+                player->FailQuest(13343);
+            }
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_hourglassAI(creature);
+    }
+};
+
+
 void AddSC_dragonblight()
 {
     new npc_alexstrasza_wr_gate;
+    new npc_hourglass;
 }
