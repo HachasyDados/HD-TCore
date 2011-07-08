@@ -159,9 +159,102 @@ public:
     }
 };
 
+/*#######################
+# npc_ws_battle_standard
+########################*/
+
+enum
+{
+    NPC_ANUBAR_AMBUSHER      = 26402,
+    QUEST_MIGHT_OF_THE_HORDE = 12053
+};
+
+class npc_ws_battle_standard : public CreatureScript
+{
+public:
+    npc_ws_battle_standard() : CreatureScript("npc_ws_battle_standard") {}
+
+    struct npc_ws_battle_standardAI : public ScriptedAI
+    {
+        npc_ws_battle_standardAI(Creature* creature) : ScriptedAI(creature) { Reset(); }
+
+        uint64 uiWaveTimer;
+        uint32 uiWaveCounter;
+
+        void Reset()
+        {
+            uiWaveTimer = 5000;
+            uiWaveCounter = 0;
+        }
+
+        void JustSummoned(Creature* pSummoned)
+        {
+            pSummoned->AI()->AttackStart(me);
+        }
+
+        void SummonWave()
+        {
+        switch(uiWaveCounter)
+            {
+            case 0: me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()+3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    break;
+            case 1: me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()+3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    break;
+            case 2: me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()+3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()-3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    break;
+            case 3: me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()+3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()-3,me->GetPositionY(),me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    me->SummonCreature(NPC_ANUBAR_AMBUSHER, me->GetPositionX()+3,me->GetPositionY()+3 ,me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                    break;
+            case 4: if (Player *player = me->GetOwner()->ToPlayer())
+                    {
+                        if (player->GetQuestStatus(QUEST_MIGHT_OF_THE_HORDE) == QUEST_STATUS_INCOMPLETE)
+                        {
+                            player->GroupEventHappens(QUEST_MIGHT_OF_THE_HORDE,me);
+                            me->DespawnOrUnsummon();
+                        }
+                    }
+                    break;
+            }
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            if (uiWaveTimer <= uiDiff)
+            {
+                if(uiWaveCounter<=4)
+                {
+                    SummonWave();
+                    uiWaveTimer = 15000;
+                    uiWaveCounter++;
+                }
+                else me->DespawnOrUnsummon();
+
+            } else uiWaveTimer -= uiDiff;
+        }
+
+        void JustDied()
+        {
+            if(Player *player = me->GetOwner()->ToPlayer())
+            {
+                if (player->GetQuestStatus(QUEST_MIGHT_OF_THE_HORDE) == QUEST_STATUS_INCOMPLETE)
+                    player->FailQuest(QUEST_MIGHT_OF_THE_HORDE);
+            }
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_ws_battle_standardAI(creature);
+    }
+};
+
 
 void AddSC_dragonblight()
 {
     new npc_alexstrasza_wr_gate;
     new npc_hourglass;
+    new npc_ws_battle_standard;
 }
