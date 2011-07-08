@@ -2559,6 +2559,60 @@ public:
 
 };
 
+/*######
+## Fizzcrank Recon Pilot - quest fix 11795 and 11887
+######*/
+
+#define GOSSIP_ITEM_PILOT_1 "Search the body for the pilot's insignia."
+#define GOSSIP_ITEM_PILOT_2 "Search the body for the pilot's emergency toolkit."
+
+enum eReconPilot
+{
+    QUEST_EMERGENCY_PROTOCOL_C = 11795,
+    QUEST_EMERGENCY_SUPPLIES = 11887,
+    SPELL_SUMMON_INSIGNIA = 46166,
+    SPELL_GIVE_EMERGENCY_KIT = 46362,
+    GOSSIP_TEXT_PILOT = 12489
+};
+
+class npc_recon_pilot : public CreatureScript
+{
+public:
+    npc_recon_pilot() : CreatureScript("npc_recon_pilot") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+        if (player->GetQuestStatus(QUEST_EMERGENCY_PROTOCOL_C) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_PILOT_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+        if (player->GetQuestStatus(QUEST_EMERGENCY_SUPPLIES) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_PILOT_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+
+        player->PlayerTalkClass->SendGossipMenu(GOSSIP_TEXT_PILOT, creature->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->PlayerTalkClass->ClearMenus();
+
+        switch (uiAction)
+        {
+            case GOSSIP_ACTION_INFO_DEF+1:
+                creature->CastSpell(player, SPELL_SUMMON_INSIGNIA, true);
+                break;
+            case GOSSIP_ACTION_INFO_DEF+2:
+                creature->CastSpell(player, SPELL_GIVE_EMERGENCY_KIT, true);
+                break;
+        }
+
+        player->CLOSE_GOSSIP_MENU();
+        creature->DespawnOrUnsummon();
+
+        return true;
+    }
+};
+
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit;
@@ -2588,4 +2642,5 @@ void AddSC_borean_tundra()
     new npc_valiance_keep_cannoneer;
     new npc_warmage_coldarra;
     new npc_hidden_cultist;
+    new npc_recon_pilot;
 }
