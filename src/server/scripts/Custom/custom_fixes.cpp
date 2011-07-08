@@ -879,6 +879,240 @@ class go_ancient_skull_pile : public GameObjectScript
         }
 };
 
+enum ymironData
+{
+    QUEST_ECHO_YMIRON     = 11343,
+    NPC_ANCIENT_VRYKUL_M  = 24314,
+    NPC_ANCIENT_VRYKUL_F  = 24315,
+    NPC_LICHKING_HF       = 24248,
+    NPC_VALKYR            = 24327,
+
+    SAY_VRYKUL_1          = -1002011, // Male
+    EMOTE_VRYKUL_1        = -1002012, // Male
+    EMOTE_VRYKUL_2        = -1002013, // Female
+    SAY_VRYKUL_2          = -1002014, // Male
+    SAY_VRYKUL_3          = -1002015, // Female
+    SAY_VRYKUL_4          = -1002016, // Male
+    SAY_VRYKUL_5          = -1002017, // Female
+
+    EMOTE_LK_1            = -1002018,
+    EMOTE_LK_2            = -1002019,
+    SAY_LK_1              = -1002020,
+    SAY_LK_2              = -1002021, //Val'kyr
+    SAY_LK_3              = -1002022,
+    SAY_LK_4              = -1002023,
+    SAY_LK_5              = -1002024,
+    SAY_LK_6              = -1002025,
+
+    SPELL_ECHO_YMIRON     = 42786,
+    SPELL_MAGNETIC_PULL   = 29661,
+    SPELL_LK_GRASP        = 43489,
+    SPELL_LK_WRATH        = 43488,
+};
+
+class npc_ancient_vrykul : public CreatureScript
+{
+public:
+    npc_ancient_vrykul() : CreatureScript("npc_ancient_vrykul") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_ancient_vrykulAI(creature);
+    }
+    struct npc_ancient_vrykulAI : public ScriptedAI
+    {
+        npc_ancient_vrykulAI(Creature* c) : ScriptedAI(c) { }
+
+        EventMap events;
+        Creature* pMale;
+        uint64 uiPlayer;
+        bool active;
+
+        void Reset()
+        {
+            uiPlayer = 0;
+            active = false;
+            events.Reset();
+
+            // Set both passive
+            me->SetReactState(REACT_PASSIVE);
+
+            if(Creature* male = me->FindNearestCreature(NPC_ANCIENT_VRYKUL_M, 5.0f))
+            {
+                male->SetReactState(REACT_PASSIVE);
+                pMale = male;
+            }
+        }
+
+        void SetGUID(const uint64 &uiGuid, int32 /*iId*/)
+        {
+            if (active)
+                return;
+
+            uiPlayer = uiGuid;
+            events.ScheduleEvent(1, 2000);
+            active = true;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            events.Update(diff);
+            switch(events.ExecuteEvent())
+            {
+                case 1:
+                    DoScriptText(SAY_VRYKUL_1, pMale);
+                    events.ScheduleEvent(2, 2000);
+                    break;
+                case 2:
+                    DoScriptText(EMOTE_VRYKUL_1, pMale);
+                    events.ScheduleEvent(3, 1000);
+                    break;
+                case 3:
+                    DoScriptText(EMOTE_VRYKUL_2, me);
+                    events.ScheduleEvent(4, 2000);
+                    break;
+                case 4:
+                    DoScriptText(SAY_VRYKUL_2, pMale);
+                    events.ScheduleEvent(5, 3000);
+                    break;
+                case 5:
+                    DoScriptText(SAY_VRYKUL_3, me);
+                    events.ScheduleEvent(6,1000);
+                    break;
+                case 6:
+                    DoScriptText(SAY_VRYKUL_4, pMale);
+                    events.ScheduleEvent(7, 2500);
+                    break;
+                case 7:
+                    DoScriptText(SAY_VRYKUL_5, me);
+                    events.ScheduleEvent(8, 1000);
+                    break;
+                case 8:
+                    if(Player* player = me->GetPlayer(*me, uiPlayer))
+                        player->GroupEventHappens(QUEST_ECHO_YMIRON, me);
+                    // Set long timer for reset, preventes restarting the event
+                    events.ScheduleEvent(9,20000);
+                    break;
+                case 9:
+                    Reset();
+                    break;
+            }
+        }
+    };
+};
+
+class at_ymiron_house : public AreaTriggerScript
+{
+    public:
+        at_ymiron_house() : AreaTriggerScript("at_ymiron_house") {}
+
+        bool OnTrigger(Player* player, AreaTriggerEntry const* /*trigger*/)
+        {
+            if(player->HasAura(SPELL_ECHO_YMIRON))
+            {
+                if(Creature * pVrykul = player->FindNearestCreature(NPC_ANCIENT_VRYKUL_F, 10.0f))
+                    pVrykul->AI()->SetGUID(player->GetGUID());
+            }
+            return true;
+        }
+};
+
+class npc_lich_king_hfjord : public CreatureScript
+{
+public:
+    npc_lich_king_hfjord() : CreatureScript("npc_lich_king_hfjord") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_lich_king_hfjordAI(creature);
+    }
+    struct npc_lich_king_hfjordAI : public ScriptedAI
+    {
+        npc_lich_king_hfjordAI(Creature* c) : ScriptedAI(c) { }
+
+        EventMap events;
+        Player* player;
+        bool active;
+
+        void Reset()
+        {
+            player = NULL;
+            active = false;
+            events.Reset();
+
+            me->SetReactState(REACT_PASSIVE);
+            me->SetOrientation(3.29914f);
+        }
+
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (!active)
+            {
+                if(Unit *pSelect = me->SelectNearestTarget(20.0f))
+                {
+                    if (pSelect->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        player = pSelect->ToPlayer();
+                        DoScriptText(EMOTE_LK_1, me);
+                        me->CastSpell(player, SPELL_MAGNETIC_PULL, true);
+                        me->CastSpell(player, SPELL_LK_GRASP, true);
+                        active = true;
+                        events.ScheduleEvent(1, 2000);
+                     }
+                }
+            }
+
+            events.Update(diff);
+            switch(events.ExecuteEvent())
+            {
+                case 1:
+                    DoScriptText(EMOTE_LK_2, me);
+                    events.ScheduleEvent(2, 1000);
+                    break;
+                case 2:
+                    DoScriptText(SAY_LK_1, me);
+                    events.ScheduleEvent(3, 2500);
+                    break;
+                case 3:
+                    if (Creature* pValkyr = me->FindNearestCreature(NPC_VALKYR, 5.0f))
+                        DoScriptText(SAY_LK_2, pValkyr);
+                    events.ScheduleEvent(4, 3000);
+                    break;
+                case 4:
+                    DoScriptText(SAY_LK_3, me);
+                    events.ScheduleEvent(5, 300);
+                    break;
+                case 5:
+                    DoScriptText(SAY_LK_4, me);
+                    events.ScheduleEvent(6,5500);
+                    break;
+                case 6:
+                    DoScriptText(SAY_LK_5, me);
+                    events.ScheduleEvent(7, 5500);
+                    break;
+                case 7:
+                    DoScriptText(SAY_LK_6, me);
+                    events.ScheduleEvent(8, 3000);
+                    break;
+                case 8:
+                    if(player)
+                        me->CastSpell(player, SPELL_LK_WRATH, true);
+                    events.ScheduleEvent(9, 500);
+                case 9:
+                    if(player)
+                        me->Kill(player);
+                    // Set long timer for reset, preventes restarting the event
+                    events.ScheduleEvent(10,20000);
+                    break;
+                case 10:
+                    Reset();
+                    break;
+            }
+        }
+    };
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -894,4 +1128,7 @@ void AddSC_custom_fixes()
     new npc_irulon_trueblade();
     new npc_banner_q11429();
     new go_ancient_skull_pile();
+    new npc_ancient_vrykul();
+    new at_ymiron_house();
+    new npc_lich_king_hfjord();
 }
