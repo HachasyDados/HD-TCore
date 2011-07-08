@@ -568,6 +568,210 @@ public:
     };
 };
 
+enum ghoulSpells
+{
+    SPELL_SHINING_LIGTH = 43202,
+    SPELL_SHINING_LIGTH_HIT_VISUAL = 46400,
+};
+
+class npc_decomposing_ghoul : public CreatureScript
+{
+public:
+    npc_decomposing_ghoul() : CreatureScript("npc_decomposing_ghoul") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_decomposing_ghoulAI(creature);
+    }
+
+    struct npc_decomposing_ghoulAI : public ScriptedAI
+    {
+        npc_decomposing_ghoulAI(Creature* c) : ScriptedAI(c) { }
+
+
+        void EnterCombat(Unit * who)
+        {
+            if (who->HasAura(SPELL_SHINING_LIGTH))
+            {
+                DoCast(SPELL_SHINING_LIGTH_HIT_VISUAL);
+                EnterEvadeMode();
+            }
+        }
+    };
+};
+
+enum irulonData
+{
+    QUEST_GUIDED_BY_HONOR = 11289,
+    NPC_TIRION            = 24232,
+    NPC_CLERIC            = 24233,
+    ITEM_ASHBRINGER       = 13262,
+
+    SAY_TIRION_1          = -1002000,
+    EMOTE_TIRION_1        = -1002001,
+    SAY_IRULON_1          = -1002002,
+    SAY_TIRION_2          = -1002003,
+    SAY_TIRION_3          = -1002004,
+    SAY_IRULON_2          = -1002005,
+    EMOTE_TIRION_2        = -1002006,
+    SAY_TIRION_4          = -1002007,
+    SAY_TIRION_5          = -1002008,
+    EMOTE_TIRION_3        = -1002009,
+    YELL_TIRION           = -1002010,
+
+    ACTION_START,
+};
+
+enum iluronEvents
+{
+    EVENT_NONE,
+    EVENT_00,
+    EVENT_01,
+    EVENT_02,
+    EVENT_03,
+    EVENT_04,
+    EVENT_05,
+    EVENT_06,
+    EVENT_07,
+    EVENT_08,
+    EVENT_09,
+    EVENT_10,
+};
+
+class npc_irulon_trueblade : public CreatureScript
+{
+public:
+    npc_irulon_trueblade() : CreatureScript("npc_irulon_trueblade") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_irulon_truebladeAI(creature);
+    }
+
+    bool OnGossipHello(Player* player, Creature* me)
+    {
+        if (me->isQuestGiver())
+            player->PrepareQuestMenu(me->GetGUID());
+
+        player->GroupEventHappens(QUEST_GUIDED_BY_HONOR, me);
+
+        player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, me->GetGUID());
+        return true;
+    }
+    bool OnQuestReward(Player* /*player*/, Creature* me, Quest const* quest, uint32 /*item*/)
+    {
+        if (quest->GetQuestId() == QUEST_GUIDED_BY_HONOR)
+            me->AI()->DoAction(ACTION_START);
+        return true;
+    }
+
+    struct npc_irulon_truebladeAI : public ScriptedAI
+    {
+        npc_irulon_truebladeAI(Creature* c) : ScriptedAI(c) { }
+
+        EventMap events;
+        uint64 uiTirion;
+
+        void Reset()
+        {
+            uiTirion = 0;
+            events.Reset();
+        }
+
+        void DoAction(const int32 actionId)
+        {
+            switch(actionId)
+            {
+                case ACTION_START:
+                    uiTirion = 0;
+                    events.ScheduleEvent(EVENT_00, 1500);
+                    break;
+            }
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            events.Update(diff);
+            switch(events.ExecuteEvent())
+            {
+                case EVENT_00:
+                    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+
+                    if(Creature* pTirion = me->FindNearestCreature(NPC_CLERIC, 7.0f))
+                    {
+                        uiTirion = pTirion->GetGUID();
+                        DoScriptText(SAY_TIRION_1, pTirion);
+                        pTirion->AddUnitMovementFlag(MOVEMENTFLAG_WALKING);
+                        pTirion->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STAND);
+                        pTirion->GetMotionMaster()->MovePoint(0, me->GetPositionX() + 3.0f, me->GetPositionY() + 3.0f, me->GetPositionZ() + 0.5f);
+                    }
+                    events.ScheduleEvent(EVENT_01, 2000);
+                    break;
+                case EVENT_01:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                    {
+                        DoScriptText(EMOTE_TIRION_1, pTirion);
+                        pTirion->UpdateEntry(NPC_TIRION);
+                        pTirion->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, 0);
+                    }
+                    events.ScheduleEvent(EVENT_02, 1000);
+                    break;
+                case EVENT_02:
+                    DoScriptText(SAY_IRULON_1, me);
+                    events.ScheduleEvent(EVENT_03, 2000);
+                    break;
+                case EVENT_03:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                        DoScriptText(SAY_TIRION_2, pTirion);
+                    events.ScheduleEvent(EVENT_04, 3000);
+                    break;
+                case EVENT_04:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                        DoScriptText(SAY_TIRION_3, pTirion);
+                    events.ScheduleEvent(EVENT_05,1000);
+                    break;
+                case EVENT_05:
+                    DoScriptText(SAY_IRULON_2, me);
+                    events.ScheduleEvent(EVENT_06, 2500);
+                    break;
+                case EVENT_06:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                        DoScriptText(EMOTE_TIRION_2, pTirion);
+                    events.ScheduleEvent(EVENT_07,1000);
+                    break;
+                case EVENT_07:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                        DoScriptText(SAY_TIRION_4, pTirion);
+                    events.ScheduleEvent(EVENT_08,1500);
+                    break;
+                case EVENT_08:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                        DoScriptText(SAY_TIRION_5, pTirion);
+                    events.ScheduleEvent(EVENT_09,1500);
+                    break;
+                case EVENT_09:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                    {
+                        DoScriptText(EMOTE_TIRION_3, pTirion);
+                        pTirion->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, ITEM_ASHBRINGER);
+                    }
+                    events.ScheduleEvent(EVENT_10,2000);
+                    break;
+                case EVENT_10:
+                    if(Creature* pTirion = me->GetCreature(*me, uiTirion))
+                    {
+                        DoScriptText(YELL_TIRION, pTirion);
+                        pTirion->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, 0);
+                        pTirion->DespawnOrUnsummon(5000);
+                    }
+                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    break;
+            }
+        }
+    };
+};
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -579,4 +783,6 @@ void AddSC_custom_fixes()
     new npc_rocket_warhead;
     new npc_father_kamaros;
     new npc_spring_rabbit;
+    new npc_decomposing_ghoul();
+    new npc_irulon_trueblade();
 }
