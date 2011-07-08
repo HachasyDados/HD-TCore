@@ -2613,6 +2613,59 @@ public:
     }
 };
 
+/*###################
+# npc_q11796_trigger
+####################*/
+
+class npc_q11796_trigger : public CreatureScript
+{
+public:
+    npc_q11796_trigger() : CreatureScript("npc_q11796_trigger") { }
+
+    enum q11796TriggerData
+    {
+        GO_TEMP_CRASHED_FLYING_MACHINE = 300181,
+        EASTERN_WRECK_GUID             = 99826,
+        SOUTHERN_WRECK_GUID            = 99827,
+        NORTHWESTERN_WRECK_GUID        = 99828,
+        EASTERN_WRECK_KC               = 25847,
+        SOUTHERN_WRECK_KC              = 25846,
+        NORTHWESTERN_WRECK_KC          = 25845,
+        SPELL_EMERGENCY_TORCH          = 46171
+    };
+
+    struct npc_q11796_triggerAI : public ScriptedAI
+    {
+        npc_q11796_triggerAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void Reset() {}
+
+        void SpellHit(Unit* caster, const SpellEntry* spell)
+        {
+            if (caster->GetTypeId() != TYPEID_PLAYER)
+                return;
+
+            if (caster->GetTypeId() == TYPEID_PLAYER && spell->Id == SPELL_EMERGENCY_TORCH)
+            {
+                if (GameObject* go = me->FindNearestGameObject(GO_TEMP_CRASHED_FLYING_MACHINE,10.0f))
+                {
+                    switch(go->GetGUIDLow())
+                    {
+                        case EASTERN_WRECK_GUID: caster->ToPlayer()->KilledMonsterCredit(EASTERN_WRECK_KC,0); break;
+                        case SOUTHERN_WRECK_GUID: caster->ToPlayer()->KilledMonsterCredit(SOUTHERN_WRECK_KC,0); break;
+                        case NORTHWESTERN_WRECK_GUID: caster->ToPlayer()->KilledMonsterCredit(NORTHWESTERN_WRECK_KC,0); break;
+                    }
+                }
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_q11796_triggerAI(creature);
+    }
+};
+
 void AddSC_borean_tundra()
 {
     new npc_sinkhole_kill_credit;
@@ -2643,4 +2696,5 @@ void AddSC_borean_tundra()
     new npc_warmage_coldarra;
     new npc_hidden_cultist;
     new npc_recon_pilot;
+    new npc_q11796_trigger;
 }
