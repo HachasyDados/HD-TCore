@@ -338,10 +338,12 @@ enum eDaegarnn
     NPC_PRISONER_1                  = 24253,  // looks the same but has different abilities
     NPC_PRISONER_2                  = 24254,
     NPC_PRISONER_3                  = 24255,
+
+    GO_CIPHER                       = 186640,
 };
 
-static float afSummon[] = {838.81f, -4678.06f, -94.182f};
-static float afCenter[] = {801.88f, -4721.87f, -96.143f};
+const Position afSummon = {838.81f, -4678.06f, -94.182f, 0.0f};
+const Position afCenter = {801.88f, -4721.87f, -96.143f, 0.0f};
 
 class npc_daegarn : public CreatureScript
 {
@@ -379,29 +381,26 @@ public:
                 return;
 
             uiPlayerGUID = uiGUID;
-
+            bEventInProgress = true;
             SummonGladiator(NPC_FIRJUS);
-        }
-
-        void JustSummoned(Creature* summon)
-        {
-            if (Player* player = me->GetPlayer(*me, uiPlayerGUID))
-            {
-                if (player->isAlive())
-                {
-                    summon->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
-                    summon->GetMotionMaster()->MovePoint(0, afCenter[0], afCenter[1], afCenter[2]);
-                    summon->AI()->AttackStart(player);
-                    return;
-                }
-            }
-
-            Reset();
         }
 
         void SummonGladiator(uint32 uiEntry)
         {
-            me->SummonCreature(uiEntry, afSummon[0], afSummon[1], afSummon[2], 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30*IN_MILLISECONDS);
+            if(Creature* pVrykul = me->SummonCreature(uiEntry, afSummon, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30*IN_MILLISECONDS))
+            {
+                if(Player* player = me->GetPlayer(*me, uiPlayerGUID))
+                {
+                    if(player->isAlive())
+                    {
+                        pVrykul->AI()->AttackStart(player);
+                        pVrykul->GetMotionMaster()->Clear();
+                        pVrykul->GetMotionMaster()->MoveChase(player);
+                        pVrykul->AddThreat(player, 100.0f);
+                    } else
+                        pVrykul->DespawnOrUnsummon();
+                }
+            }
         }
 
         void SummonedCreatureDies(Creature* summoned, Unit* /*killer*/)
@@ -414,7 +413,10 @@ public:
                 case NPC_FIRJUS:    uiEntry = NPC_JLARBORN; break;
                 case NPC_JLARBORN:  uiEntry = NPC_YOROS;    break;
                 case NPC_YOROS:     uiEntry = NPC_OLUF;     break;
-                case NPC_OLUF:      Reset();                return;
+                case NPC_OLUF:
+                    me->SummonGameObject(GO_CIPHER, afCenter.GetPositionX(), afCenter.GetPositionY(), afCenter.GetPositionZ(), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 300000);
+                    Reset();
+                    return;
             }
 
             SummonGladiator(uiEntry);
