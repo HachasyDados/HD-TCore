@@ -56,6 +56,9 @@ void CharacterDatabaseCleaner::CleanDatabase()
     if (flags & CLEANING_FLAG_QUESTSTATUS)
         CleanCharacterQuestStatus();
 
+    if (flags & CLEANING_FLAG_CUSTOM)
+        CleanCustom();
+
     // NOTE: In order to have persistentFlags be set in worldstates for the next cleanup,
     // you need to define them at least once in worldstates.
     flags &= sWorld->getIntConfig(CONFIG_PERSISTENT_CHARACTER_CLEAN_FLAGS);
@@ -156,3 +159,23 @@ void CharacterDatabaseCleaner::CleanCharacterQuestStatus()
     CharacterDatabase.DirectExecute("DELETE FROM character_queststatus WHERE status = 0");
 }
 
+enum CustomFlags {
+    CUSTOM_CLEANING_FLAG_CHILDREN = 0x1, // Limpieza de las misiones de la Semana de los niños.
+};
+
+void CharacterDatabaseCleaner::CleanCustom()
+{
+    // Obtenemos flags de cleaning_flags_custom
+    QueryResult result = CharacterDatabase.Query("SELECT value FROM worldstates WHERE entry = 20005");
+    if (!result)
+        return;
+
+    uint32 flags = (*result)[0].GetUInt32();
+
+    // Comprobaciones (mirar y definir enum CustomFlags si es necesario)
+    if (flags & CUSTOM_CLEANING_FLAG_CHILDREN)
+        CharacterDatabase.DirectExecute("DELETE FROM `character_queststatus_rewarded` WHERE quest IN(SELECT DISTINCT quest FROM `world_tdb`.`creature_questrelation` WHERE id IN (14305, 14444, 22818, 22817) UNION(SELECT DISTINCT quest FROM `world_tdb`.`creature_involvedrelation` WHERE id IN (14305, 14444, 22818, 22817)))");
+
+    // Eliminamos CustomFlags
+    CharacterDatabase.DirectPExecute("UPDATE worldstates SET value = 0 WHERE entry = 20005", flags);
+}
