@@ -772,6 +772,76 @@ public:
         }
     };
 };
+
+enum q11429Data
+{
+    QUEST_DROP_IT_ROCK_IT = 11429,
+    NPC_WINTERSKORN_DEFENDER = 24015,
+};
+
+class npc_banner_q11429 : public CreatureScript
+{
+public:
+    npc_banner_q11429() : CreatureScript("npc_banner_q11429") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_banner_q11429AI(creature);
+    }
+
+    struct npc_banner_q11429AI : public ScriptedAI
+    {
+        npc_banner_q11429AI(Creature* c) : ScriptedAI(c) { }
+
+        uint32 uiWaveTimer;
+        uint8 killCounter;
+
+        void Reset()
+        {
+            killCounter = 0;
+            uiWaveTimer = 2000;
+            me->SetReactState(REACT_PASSIVE);
+            me->GetMotionMaster()->MoveIdle();
+        }
+
+        void JustDied(Unit* /*killer*/)
+        {
+            if (Player* player = me->GetOwner()->ToPlayer())
+                player->FailQuest(QUEST_DROP_IT_ROCK_IT);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if(uiWaveTimer < diff)
+            {
+                if(Creature* pVrykul = me->SummonCreature(NPC_WINTERSKORN_DEFENDER, (1476.85f + rand()%20), (-5327.56f + rand()%20), (194.8f  + rand()%2), 0.0f, TEMPSUMMON_CORPSE_DESPAWN))
+                {
+                    pVrykul->AI()->AttackStart(me);
+                    pVrykul->GetMotionMaster()->Clear();
+                    pVrykul->GetMotionMaster()->MoveChase(me);
+                }
+                uiWaveTimer = urand(8000, 16000);
+            }
+            else
+                uiWaveTimer -= diff;
+        }
+
+        void SummonedCreatureDespawn(Creature* summon)
+        {
+            if (summon->GetEntry() == NPC_WINTERSKORN_DEFENDER)
+                killCounter++;
+
+            if(killCounter >= 3)
+            {
+                if (Player* player = me->GetOwner()->ToPlayer())
+                    player->GroupEventHappens(QUEST_DROP_IT_ROCK_IT, me);
+
+                me->DespawnOrUnsummon(2000);
+            }
+        }
+    };
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -785,4 +855,5 @@ void AddSC_custom_fixes()
     new npc_spring_rabbit;
     new npc_decomposing_ghoul();
     new npc_irulon_trueblade();
+    new npc_banner_q11429();
 }
