@@ -746,9 +746,16 @@ uint32 Unit::DealDamage(Unit* victim, uint32 damage, CleanDamage const* cleanDam
 
         // in bg, count dmg if victim is also a player
         if (victim->GetTypeId() == TYPEID_PLAYER)
+        {
             if (Battleground* bg = killer->GetBattleground())
+            {
                 bg->UpdatePlayerScore(killer, SCORE_DAMAGE_DONE, damage);
-
+                /** World of Warcraft Armory **/
+                if (Battleground *bgV = ((Player*)victim)->GetBattleground())
+                    bgV->UpdatePlayerScore(((Player*)victim), SCORE_DAMAGE_TAKEN, damage);
+                /** World of Warcraft Armory **/
+            }
+        }
         killer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE, damage, 0, victim);
         killer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HIT_DEALT, damage);
     }
@@ -10071,6 +10078,10 @@ int32 Unit::DealHeal(Unit* victim, uint32 addhealth)
     {
         player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_TOTAL_HEALING_RECEIVED, gain);
         player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEALING_RECEIVED, addhealth);
+        /** World of Warcraft Armory **/
+        if (Battleground *bgV = victim->ToPlayer()->GetBattleground())
+            bgV->UpdatePlayerScore((Player*)victim, SCORE_HEALING_TAKEN, gain);
+        /** World of Warcraft Armory **/
     }
 
     return gain;
@@ -15606,7 +15617,9 @@ void Unit::Kill(Unit* victim, bool durabilityLoss)
                 if (instanceMap->IsRaidOrHeroicDungeon())
                 {
                     if (creature->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_INSTANCE_BIND)
-                        ((InstanceMap*)instanceMap)->PermBindAllPlayers(creditedPlayer);
+                    {
+                        ((InstanceMap*)instanceMap)->PermBindAllPlayers(creditedPlayer);                        creditedPlayer->CreateWowarmoryFeed(3, creature->GetCreatureInfo()->Entry, 0, 0);
+                    }
                 }
                 else
                 {
