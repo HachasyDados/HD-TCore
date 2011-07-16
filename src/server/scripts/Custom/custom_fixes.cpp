@@ -2708,6 +2708,35 @@ class at_nats_landing : public AreaTriggerScript
         }
 };
 
+/*########################
+# at_legion_hold_smvalley
+#########################*/
+
+enum ToLegionHold
+{
+    SPELL_CRATE_DISGUISE = 37097,
+    NPC_RAZUUN = 21502,
+    NPC_JOVAAN = 21633
+};
+
+class at_legion_hold_smvalley : public AreaTriggerScript
+{
+    public:
+
+        at_legion_hold_smvalley() : AreaTriggerScript("at_legion_hold_smvalley") {}
+
+        bool OnTrigger(Player* player, AreaTriggerEntry const* /*trigger*/)
+        {
+            if (player->HasAura(SPELL_CRATE_DISGUISE))
+            {
+                player->SummonCreature(NPC_RAZUUN, -3302.599854f, 2928.284424f, 170.921692f, 2.609816f, TEMPSUMMON_TIMED_DESPAWN, 40000);
+                player->SummonCreature(NPC_JOVAAN, -3306.278076f, 2932.812500f, 170.923660f, 5.535417f, TEMPSUMMON_TIMED_DESPAWN, 40000);
+                player->KilledMonsterCredit(21502,0);
+                return true;
+            }
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -2749,4 +2778,5 @@ void AddSC_custom_fixes()
     new mob_ahunite_frostwind();
     new go_ice_stone_midsummer();
     new at_nats_landing();
+    new at_legion_hold_smvalley();
 }
