@@ -1,0 +1,1 @@
+UPDATE creature_template SET ScriptName='npc_feknut_bunny' WHERE entry=24230;
