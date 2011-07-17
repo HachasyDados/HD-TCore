@@ -2737,6 +2737,65 @@ class at_legion_hold_smvalley : public AreaTriggerScript
         }
 };
 
+/*######
+## npc_feknut_bunny
+######*/
+
+enum FeknutBunnyData
+{
+    NPC_DARKCLAW_BAT        = 23959,
+    SPELL_SUMMON_GUANO      = 43307
+
+};
+
+class npc_feknut_bunny : public CreatureScript
+{
+public:
+    npc_feknut_bunny() : CreatureScript("npc_feknut_bunny") {}
+
+    struct npc_feknut_bunnyAI : public ScriptedAI
+    {
+        npc_feknut_bunnyAI (Creature* creature) : ScriptedAI(creature) {}
+
+        uint32 CheckTimer;
+        bool Checked;
+
+        void Reset()
+        {
+            CheckTimer = 1000;
+            Checked = false;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if(!Checked)
+            {
+                if (CheckTimer <= diff)
+                {
+                    if(Creature* bat = GetClosestCreatureWithEntry(me, NPC_DARKCLAW_BAT, 35.0f))
+                    {
+                        if(bat->isAlive())
+                        {
+                            bat->CastSpell(me, SPELL_SUMMON_GUANO, false);
+                            Checked = true;
+                        }
+                        if(Player* player = me->GetOwner()->ToPlayer())
+                        {
+                            bat->Attack(player, true);
+                            bat->GetMotionMaster()->MoveChase(player);
+                        }
+                    }
+                    me->DespawnOrUnsummon();
+                } else CheckTimer -= diff;
+            }
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_feknut_bunnyAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -2779,4 +2838,5 @@ void AddSC_custom_fixes()
     new go_ice_stone_midsummer();
     new at_nats_landing();
     new at_legion_hold_smvalley();
+    new npc_feknut_bunny();
 }
