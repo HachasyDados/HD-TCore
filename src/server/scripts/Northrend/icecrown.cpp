@@ -518,6 +518,7 @@ public:
         bool npcCheck = false;
         bool questCheck = false;
         bool raceCheck = false;
+        bool friendlyCheck = false;
         uint32 textId = 0;
 
         for(int i = 0; (i < 10) && !npcCheck; i++)
@@ -525,13 +526,18 @@ public:
             if(creature->GetEntry() == ArgentTournamentVendor[i][0])
             {
                 npcCheck = true;
-                questCheck = player->GetQuestStatus(ArgentTournamentVendor[i][1]) == QUEST_STATUS_COMPLETE;
+                //questCheck = player->GetQuestStatus(ArgentTournamentVendor[i][1]) == QUEST_STATUS_COMPLETE;
+                if((player->GetQuestStatus(ArgentTournamentVendor[i][1]) == QUEST_STATUS_COMPLETE) || (player->GetQuestStatus(ArgentTournamentVendor[i][1]) == QUEST_STATUS_REWARDED))
+                    {
+                        questCheck = true;
+                    }
                 raceCheck = player->getRace() == ArgentTournamentVendor[i][2];
+                friendlyCheck = creature->IsFriendlyTo(player);
                 textId = ArgentTournamentVendor[i][3];
             }
         }
 
-        if(questCheck || raceCheck)
+        if(questCheck || friendlyCheck)// || raceCheck)
             player->GetSession()->SendListInventory(creature->GetGUID());
         else
             player->SEND_GOSSIP_MENU(textId, creature->GetGUID());
