@@ -6938,6 +6938,14 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, AuraEffect* triggere
                     target = victim;
                     break;
                 }
+                case 199997: // Divine Storm Helper (SERVERSIDE)
+                {
+                    if (victim == this)
+                        return false;
+
+                    triggeredByAura->SetAmount(triggeredByAura->GetAmount() + damage);
+                    return true;
+                }
                 // Item - Icecrown 25 Normal Dagger Proc
                 case 71880:
                 {
