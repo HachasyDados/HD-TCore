@@ -2796,6 +2796,26 @@ public:
     }
 };
 
+/*###########################
+# at_azure_dragons_sanctuary
+############################*/
+
+class at_azure_dragons_sanctuary : public AreaTriggerScript
+{
+    public:
+
+        at_azure_dragons_sanctuary() : AreaTriggerScript("at_azure_dragons_sanctuary") {}
+
+        bool OnTrigger(Player* player, AreaTriggerEntry const* /*trigger*/)
+        {
+            if (player->GetQuestStatus(12107) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(12110) == QUEST_STATUS_INCOMPLETE)
+            {
+                player->KilledMonsterCredit(26889,0);
+                return true;
+            }
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -2839,4 +2859,5 @@ void AddSC_custom_fixes()
     new at_nats_landing();
     new at_legion_hold_smvalley();
     new npc_feknut_bunny();
+    new at_azure_dragons_sanctuary();
 }
