@@ -569,29 +569,7 @@ uint32 ArenaTeam::GetAverageMMR(Group* group) const
     if (!group)
         return 0;
 
-    uint32 matchMakerRating = 0;
-    uint32 playerDivider = 0;
-    for (MemberList::const_iterator itr = Members.begin(); itr != Members.end(); ++itr)
-    {
-        // Skip if player is not online
-        if (!ObjectAccessor::FindPlayer(itr->Guid))
-            continue;
-
-        // Skip if player is not member of group
-        if (!group->IsMember(itr->Guid))
-            continue;
-
-        matchMakerRating += itr->MatchMakerRating;
-        ++playerDivider;
-    }
-
-    // x/0 = crash
-    if (playerDivider == 0)
-        playerDivider = 1;
-
-    matchMakerRating /= playerDivider;
-
-    return matchMakerRating;
+    return Stats.Rating;
 }
 
 float ArenaTeam::GetChanceAgainst(uint32 ownRating, uint32 opponentRating)
@@ -611,19 +589,15 @@ int32 ArenaTeam::GetRatingMod(uint32 ownRating, uint32 opponentRating, bool won,
     // Simulation on how it works. Not much info on how it really works
     float mod;
 
-    if (won && !calculateMatchMakerRating)
+    if (ownRating < 1200)
     {
-        if (ownRating < 1000)
-            mod = 48.0f * (won_mod - chance);
-        else if (ownRating < 1300)
-            mod = (24.0f + (24.0f * (1300.0f - int32(ownRating)) / 300.0f)) * (won_mod - chance);
+        if (won)
+            mod = 48.0f;
         else
-            mod = 24.0f * (won_mod - chance);
+            mod = 0.0f;
     }
-    else
-        mod = 24.0f * (won_mod - chance);
-
-    return (int32)ceil(mod);
+    else mod = (int)(32.0f * (won_mod - chance));
+    return mod;
 }
 
 int32 ArenaTeam::GetPersonalRatingMod(int32 baseRating, uint32 ownRating, uint32 opponentRating)
