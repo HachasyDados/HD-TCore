@@ -1832,6 +1832,51 @@ public:
     }
 };
 
+enum woodlandsWalkerData
+{
+    HOSTILE_FACTION = 16,
+    QUEST_STRENGTH_ANCIENTS_A = 12092,
+    QUEST_STRENGTH_ANCIENTS_H = 12096,
+    ITEM_BARK_WALKERS = 36786,
+};
+
+#define GOSSIP_ITEM_BARK "Necesito un poco de tu corteza para reponer a los ancestros."
+
+class npc_woodlands_walker : public CreatureScript
+{
+public:
+    npc_woodlands_walker() : CreatureScript("npc_woodlands_walker") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+        if (player->GetQuestStatus(QUEST_STRENGTH_ANCIENTS_A) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_STRENGTH_ANCIENTS_H) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_BARK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->CLOSE_GOSSIP_MENU();
+
+        switch (urand (1,2))
+        {
+            case 1:
+                player->AddItem(ITEM_BARK_WALKERS, 1);
+                creature->DisappearAndDie();
+                break;
+            case 2:
+                creature->setFaction(HOSTILE_FACTION);
+                creature->AI()->AttackStart(player);
+                break;
+        }
+
+        return true;
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1860,4 +1905,5 @@ void AddSC_custom_fixes()
     new npc_keristrasza_coldarra();
     new npc_evergrove_druid();
     new npc_antelarion_gossip();
+    new npc_woodlands_walker();
 }
