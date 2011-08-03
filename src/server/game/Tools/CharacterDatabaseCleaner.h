@@ -45,7 +45,7 @@ namespace CharacterDatabaseCleaner
     void CleanCharacterSpell();
     void CleanCharacterTalent();
     void CleanCharacterQuestStatus();
-    void CleanCustom();
+    void ExecuteDBStoredQueries();
 }
 
 #endif
