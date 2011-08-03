@@ -57,7 +57,7 @@ void CharacterDatabaseCleaner::CleanDatabase()
         CleanCharacterQuestStatus();
 
     if (flags & CLEANING_FLAG_CUSTOM)
-        CleanCustom();
+        ExecuteDBStoredQueries();
 
     // NOTE: In order to have persistentFlags be set in worldstates for the next cleanup,
     // you need to define them at least once in worldstates.
@@ -159,23 +159,38 @@ void CharacterDatabaseCleaner::CleanCharacterQuestStatus()
     CharacterDatabase.DirectExecute("DELETE FROM character_queststatus WHERE status = 0");
 }
 
-enum CustomFlags {
-    CUSTOM_CLEANING_FLAG_CHILDREN = 0x1, // Limpieza de las misiones de la Semana de los niños.
-};
-
-void CharacterDatabaseCleaner::CleanCustom()
+void CharacterDatabaseCleaner::ExecuteDBStoredQueries()
 {
-    // Obtenemos flags de cleaning_flags_custom
-    QueryResult result = CharacterDatabase.Query("SELECT value FROM worldstates WHERE entry = 20005");
-    if (!result)
+    // Seleccionamos las queries que estan activas y sus comentarios correspondientes.
+    QueryResult result = CharacterDatabase.Query("SELECT `query`, `comment` FROM `stored_db_queries` WHERE active IN (1, 2);");
+
+    sLog->outString(">> Executing DB stored queries...");
+
+    if(!result) // La consulta estaba vacia, lanzamos error y salimos
+    {
+        sLog->outErrorDb("Setted for running on boot, but no queries pending of execution.");
+        sLog->outString();
         return;
+    }
 
-    uint32 flags = (*result)[0].GetUInt32();
+    do // Recorremos todas las filas de la consulta
+    {
+        Field *fields = result->Fetch();
 
-    // Comprobaciones (mirar y definir enum CustomFlags si es necesario)
-    if (flags & CUSTOM_CLEANING_FLAG_CHILDREN)
-        CharacterDatabase.DirectExecute("DELETE FROM `character_queststatus_rewarded` WHERE quest IN(SELECT DISTINCT quest FROM `world_tdb`.`creature_questrelation` WHERE id IN (14305, 14444, 22818, 22817) UNION(SELECT DISTINCT quest FROM `world_tdb`.`creature_involvedrelation` WHERE id IN (14305, 14444, 22818, 22817)))");
+        const char* query = fields[0].GetCString();
+        const char* comment = fields[1].GetCString();
 
-    // Eliminamos CustomFlags
-    CharacterDatabase.DirectPExecute("UPDATE worldstates SET value = 0 WHERE entry = 20005", flags);
+        // Mostramos mensaje en consola
+        sLog->outString("      Executing %s...", comment);
+
+        // Ejecutamos la query
+        CharacterDatabase.DirectPExecute(query);
+    } while(result->NextRow());
+
+    // Desactivamos las consultas activas
+    CharacterDatabase.DirectPExecute("UPDATE `stored_db_queries` SET `active` = 0 WHERE active = 1;");
+
+    // Borramos las que son consultas temporables
+    CharacterDatabase.DirectPExecute("DELETE FROM `stored_db_queries` WHERE active = 2;");
+    sLog->outString();
 }
