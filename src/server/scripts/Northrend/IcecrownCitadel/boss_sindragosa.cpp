@@ -1179,7 +1179,7 @@ class FrostBombTargetSelector
 
         bool operator()(Unit* unit)
         {
-            if (unit->HasAura(SPELL_ICE_TOMB_DAMAGE))
+            if (unit->HasAura(SPELL_ICE_TOMB_DAMAGE) || unit->GetTypeId() != TYPEID_PLAYER)
                 return true;
 
             for (std::list<Creature*>::const_iterator itr = _collisionList.begin(); itr != _collisionList.end(); ++itr)
