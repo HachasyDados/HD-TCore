@@ -30,6 +30,7 @@ EndContentData */
 
 #include "ScriptPCH.h"
 #include "ScriptedEscortAI.h"
+#include "Vehicle.h"
 
 /*######
 ## npc_injured_rainspeaker_oracle
@@ -666,6 +667,190 @@ public:
     }
 };
 
+const Position CaptiveCrocWaypoints[32] =
+{
+    {5296.98f, 4449.35f, -97.6785f, 0.0f},
+    {5268.84f, 4431.05f, -95.9974f, 0.0f},
+    {5253.46f, 4394.40f, -95.0352f, 0.0f},
+    {5263.19f, 4365.86f, -98.5669f, 0.0f},
+    {5284.49f, 4366.25f, -101.402f, 0.0f},
+    {5297.54f, 4358.85f, -105.052, 0.0f},
+    {5354.68f, 4361.32f, -128.512f, 0.0f},
+    {5378.45f, 4313.85f, -147.025f, 0.0f},
+    {5418.90f, 4345.02f, -146.904f, 0.0f},
+    {5448.35f, 4407.74f, -146.738f, 0.0f},
+    {5511.23f, 4457.99f, -146.229f, 0.0f},
+    {5507.92f, 4540.06f, -145.055f, 0.0f},
+    {5496.91f, 4565.59f, -141.307f, 0.0f},
+    {5489.50f, 4608.78f, -138.538f, 0.0f},
+    {5506.16f, 4640.55f, -134.925f, 0.0f},
+    {5577.96f, 4664.14f, -134.699f, 0.0f},
+    {5615.76f, 4702.42f, -136.552f, 0.0f},
+    {5631.72f, 4729.98f, -134.209f, 0.0f},
+    {5648.63f, 4749.76f, -140.618f, 0.0f},
+    {5667.33f, 4777.87f, -141.298f, 0.0f},
+    {5697.99f, 4814.09f, -139.960f, 0.0f},
+    {5707.43f, 4829.78f, -135.915f, 0.0f},
+    {5796.30f, 4840.33f, -133.721f, 0.0f},
+    {5818.77f, 4842.79f, -140.250f, 0.0f},
+    {5851.73f, 4834.99f, -134.428f, 0.0f},
+    {5886.75f, 4832.68f, -129.530f, 0.0f},
+    {5925.07f, 4836.92f, -113.021f, 0.0f},
+    {5948.74f, 4843.23f, -103.147f, 0.0f},
+    {5984.39f, 4858.27f, -98.9468f, 0.0f},
+    {6055.89f, 4888.39f, -94.4171f, 0.0f},
+    {6129.51f, 4929.48f, -95.6752f, 0.0f},
+    {6153.20f, 4942.70f, -90.4089f, 0.0f}
+};
+#define GOSSIP_ITEM1 "Viajar a Refugio Susurraneblina"
+
+class npc_captive_croco_gossip : public CreatureScript
+{
+public:
+    npc_captive_croco_gossip() : CreatureScript("npc_captive_croco_gossip") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+
+        if (player->GetQuestStatus(12536) == QUEST_STATUS_INCOMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->CLOSE_GOSSIP_MENU();
+
+        if (!player->HasUnitState(UNIT_STAT_ONVEHICLE))
+        {
+            if (Creature* pTemp = player->SummonCreature(28308, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), 0))
+            {
+                pTemp->SetCreatorGUID(player->GetGUID());
+                player->EnterVehicle(pTemp, 0);
+            }
+            if (Unit* base = player->GetVehicleBase())
+                if (base->isCharmed())
+                    base->RemoveCharmedBy(base->GetCharmer());
+        }
+        return true;
+    }
+};
+
+class npc_captive_croco_vehicle : public CreatureScript
+{
+public:
+    npc_captive_croco_vehicle() : CreatureScript("npc_captive_croco_vehicle") { }
+
+    struct npc_captive_croco_vehicleAI : public ScriptedAI
+    {
+        npc_captive_croco_vehicleAI(Creature* creature) : ScriptedAI(creature) { }
+
+        uint8 count;
+        uint64 uiPlayer;
+        bool occupied;
+        bool wp_reached;
+        bool movementStarted;
+
+        void Reset()
+        {
+            me->SetSpeed(MOVE_SWIM, 2.0f, true);
+            count = 0;
+            occupied = false;
+            wp_reached = false;
+            movementStarted = false;
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if (type != POINT_MOTION_TYPE || id != count)
+                return;
+
+            if (id < 31)
+            {
+                Unit* player = me->GetVehicleKit()->GetPassenger(0);
+                if (player && player->GetTypeId() == TYPEID_PLAYER)
+                {
+                    ++count;
+                    wp_reached = true;
+                }
+                else
+                    me->DisappearAndDie();
+            }
+            else // reached questgiver, give credit
+            {
+                Unit* player = me->GetVehicleKit()->GetPassenger(0);
+                if (player && player->GetTypeId() == TYPEID_PLAYER)
+                {
+                    player->ToPlayer()->CompleteQuest(12536);
+                    player->ExitVehicle();
+                }
+                me->DisappearAndDie();
+            }
+        }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            if (!me->isCharmed() && !movementStarted)
+            {
+                movementStarted = true;
+                wp_reached = true;
+            }
+
+            if (wp_reached)
+            {
+                wp_reached = false;
+                me->GetMotionMaster()->MovePoint(count, CaptiveCrocWaypoints[count]);
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_captive_croco_vehicleAI(creature);
+    }
+};
+
+#define GOSSIP_ITEM_ZEPIK "Necesito comunicarme con Zepik."
+#define GOSSIP_ITEM_DAJIK "Necesito comunicarme con Dajik."
+#define GOSSIP_ITEM_GOREGEK "Necesito comunicarme con Goregek."
+
+class npc_harkek_gossip : public CreatureScript
+{
+public:
+    npc_harkek_gossip() : CreatureScript("npc_harkek_gossip") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+
+        if (player->GetQuestStatus(12536) == QUEST_STATUS_COMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ZEPIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+        if (player->GetQuestStatus(12534) == QUEST_STATUS_COMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DAJIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+
+        if (player->GetQuestStatus(12529) == QUEST_STATUS_COMPLETE)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GOREGEK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action)
+    {
+        player->CLOSE_GOSSIP_MENU();
+        switch (action)
+          {
+            case GOSSIP_ACTION_INFO_DEF+1: player->CastSpell(player, 52545, false); break;
+            case GOSSIP_ACTION_INFO_DEF+2: player->CastSpell(player, 52544, false); break;
+            case GOSSIP_ACTION_INFO_DEF+3: player->CastSpell(player, 52542, false); break;
+        }
+        return true;
+    }
+};
+
 void AddSC_sholazar_basin()
 {
     new npc_injured_rainspeaker_oracle();
@@ -675,4 +860,7 @@ void AddSC_sholazar_basin()
     new npc_engineer_helice();
     new npc_adventurous_dwarf();
     new npc_jungle_punch_target();
+    new npc_captive_croco_gossip();
+    new npc_captive_croco_vehicle();
+    new npc_harkek_gossip();
 }
