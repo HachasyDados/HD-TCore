@@ -691,6 +691,12 @@ class npc_risen_archmage : public CreatureScript
                 _canCallEnterCombat = true;
             }
 
+            void IsSummonedBy(Unit* /*summoner*/)
+            {
+                if (Creature* valithria = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_DREAMWALKER)))
+                    me->GetMotionMaster()->MoveChase(valithria);
+            }
+
             void EnterCombat(Unit* /*target*/)
             {
                 me->FinishSpell(CURRENT_CHANNELED_SPELL, false);
@@ -789,7 +795,7 @@ class npc_blazing_skeleton : public CreatureScript
 
         struct npc_blazing_skeletonAI : public ScriptedAI
         {
-            npc_blazing_skeletonAI(Creature* creature) : ScriptedAI(creature)
+            npc_blazing_skeletonAI(Creature* creature) : ScriptedAI(creature), _instance(creature->GetInstanceScript())
             {
             }
 
@@ -798,6 +804,12 @@ class npc_blazing_skeleton : public CreatureScript
                 _events.Reset();
                 _events.ScheduleEvent(EVENT_FIREBALL, urand(2000, 4000));
                 _events.ScheduleEvent(EVENT_LEY_WASTE, urand(15000, 20000));
+            }
+
+            void IsSummonedBy(Unit* /*summoner*/)
+            {
+                if (Creature* valithria = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_DREAMWALKER)))
+                    AttackStart(valithria);
             }
 
             void UpdateAI(uint32 const diff)
@@ -833,6 +845,7 @@ class npc_blazing_skeleton : public CreatureScript
 
         private:
             EventMap _events;
+            InstanceScript* const _instance;
         };
 
         CreatureAI* GetAI(Creature* creature) const
@@ -914,13 +927,19 @@ class npc_blistering_zombie : public CreatureScript
 
         struct npc_blistering_zombieAI : public ScriptedAI
         {
-            npc_blistering_zombieAI(Creature* creature) : ScriptedAI(creature)
+            npc_blistering_zombieAI(Creature* creature) : ScriptedAI(creature), _instance(creature->GetInstanceScript())
             {
             }
 
             void JustDied(Unit* /*killer*/)
             {
                 DoCast(me, SPELL_ACID_BURST, true);
+            }
+
+            void IsSummonedBy(Unit* /*summoner*/)
+            {
+                if (Creature* valithria = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_DREAMWALKER)))
+                    AttackStart(valithria);
             }
 
             void UpdateAI(uint32 const /*diff*/)
@@ -930,6 +949,8 @@ class npc_blistering_zombie : public CreatureScript
 
                 DoMeleeAttackIfReady();
             }
+    private:
+        InstanceScript* const _instance;
         };
 
         CreatureAI* GetAI(Creature* creature) const
@@ -945,7 +966,7 @@ class npc_gluttonous_abomination : public CreatureScript
 
         struct npc_gluttonous_abominationAI : public ScriptedAI
         {
-            npc_gluttonous_abominationAI(Creature* creature) : ScriptedAI(creature)
+            npc_gluttonous_abominationAI(Creature* creature) : ScriptedAI(creature), _instance(creature->GetInstanceScript())
             {
             }
 
@@ -953,6 +974,12 @@ class npc_gluttonous_abomination : public CreatureScript
             {
                 _events.Reset();
                 _events.ScheduleEvent(EVENT_GUT_SPRAY, urand(10000, 13000));
+            }
+
+            void IsSummonedBy(Unit* /*summoner*/)
+            {
+                if (Creature* valithria = ObjectAccessor::GetCreature(*me, _instance->GetData64(DATA_VALITHRIA_DREAMWALKER)))
+                    AttackStart(valithria);
             }
 
             void JustDied(Unit* /*killer*/)
@@ -988,6 +1015,7 @@ class npc_gluttonous_abomination : public CreatureScript
 
         private:
             EventMap _events;
+            InstanceScript* const _instance;
         };
 
         CreatureAI* GetAI(Creature* creature) const
