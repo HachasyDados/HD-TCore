@@ -275,6 +275,8 @@ class boss_drakkari_elemental : public CreatureScript
                 if (killer == me)
                     return;
 
+                me->RemoveAurasDueToSpell(SPELL_MOJO_VOLLEY);
+
                 if (instance)
                 {
                     if (Creature* colossus = Unit::GetCreature(*me, instance->GetData64(DATA_DRAKKARI_COLOSSUS)))
