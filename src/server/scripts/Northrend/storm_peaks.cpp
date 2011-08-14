@@ -939,6 +939,132 @@ public:
     }
 };
 
+/*######
+## Quest: The Drakkensryd (12886)
+######*/
+
+enum eHyldsmeetProtodrake
+{
+    //QUEST_DRAKKENSRYD              = 12886,
+    ENTRY_DRAKE_RIDER              = 29800
+};
+
+const Position HyldsmeetProtodrakeWaypoints[11] =
+{
+    {7043.96f, -1742.44f, 838.93f, 0.0f},
+    {7034.98f, -1709.58f, 856.51f, 0.0f},
+    {7079.37f, -1612.35f, 924.75f, 0.0f},
+    {7379.18f, -1134.81f, 1088.66f, 0.0f},
+    {7692.76f, -651.09f, 1461.96f, 0.0f},
+    {7675.39f, -486.31f, 1672.88f, 0.0f},
+    {7593.01f, -442.39f, 1786.34f, 0.0f},
+    {7439.90f, -381.42f, 1852.33f, 0.0f},
+    {7339.86f, -426.02f, 1852.92f, 0.0f},
+    {7324.65f, -553.58f, 1924.50f, 0.0f},
+    {7397.71f, -540.00f, 1927.81f, 0.0f}
+};
+
+class npc_hyldsmeet_protodrake_hyd : public CreatureScript
+{
+public:
+    npc_hyldsmeet_protodrake_hyd() : CreatureScript("npc_hyldsmeet_protodrake_hyd") { }
+
+    struct npc_hyldsmeet_protodrake_hydAI : public ScriptedAI
+    {
+        npc_hyldsmeet_protodrake_hydAI(Creature* creature) : ScriptedAI(creature) { }
+
+        uint8 count;
+        bool wp_reached;
+
+        void Reset()
+        {
+            count = 0;
+            wp_reached = false;
+        }
+
+        void PassengerBoarded(Unit* who, int8 /*seatId*/, bool apply)
+        {
+            if (who && apply)
+            {
+                    wp_reached = true;
+                    me->SetFlying(true);
+                    me->SetSpeed(MOVE_FLIGHT, 5.0f);
+            }
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if (type != POINT_MOTION_TYPE || id != count)
+                return;
+
+            if (id < 10)
+            {
+                ++count;
+                wp_reached = true;
+            }
+            else // TODO: remove this and loop waypoints around the hill
+            {
+                Unit* player = me->GetVehicleKit()->GetPassenger(0);
+                if (player && player->GetTypeId() == TYPEID_PLAYER)
+                {
+                    for (uint8 i = 0; i < 10; ++i)
+                        player->ToPlayer()->KilledMonsterCredit(ENTRY_DRAKE_RIDER, 0);
+                    player->ExitVehicle();
+                    me->DespawnOrUnsummon(5000);
+                }
+            }
+        }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            if (wp_reached)
+            {
+                wp_reached = false;
+                me->GetMotionMaster()->MovePoint(count, HyldsmeetProtodrakeWaypoints[count]);
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_hyldsmeet_protodrake_hydAI(creature);
+    }
+};
+
+/*###################
+# npc_column_ornament
+####################*/
+
+class npc_column_ornament : public CreatureScript
+{
+public:
+    npc_column_ornament() : CreatureScript("npc_column_ornament") { }
+
+    struct npc_column_ornamentAI : public ScriptedAI
+    {
+        npc_column_ornamentAI(Creature* creature) : ScriptedAI(creature) { }
+
+          void Reset() { }
+
+        void SpellHit(Unit* caster, const SpellEntry* spell)
+        {
+                   if (caster->GetTypeId() != TYPEID_PLAYER)
+                      return;
+
+               if (caster->GetTypeId() == TYPEID_PLAYER && spell->Id == 54933)
+            {
+                          caster->ToPlayer()->ExitVehicle();
+                     caster->ToPlayer()->TeleportTo(571,7413.259766f,-523.398010f,1922.160034f,2.592530f);
+            }
+            }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_column_ornamentAI(creature);
+    }
+};
+
 void AddSC_storm_peaks()
 {
     new npc_agnetta_tyrsdottar;
@@ -955,4 +1081,6 @@ void AddSC_storm_peaks()
     new npc_hyldsmeet_protodrake;
     new npc_injured_icemaw;
     new npc_harnessed_icemaw;
+    new npc_hyldsmeet_protodrake_hyd;
+    new npc_column_ornament;
 }
