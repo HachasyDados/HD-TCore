@@ -509,6 +509,7 @@ void LFGMgr::Join(Player* plr, uint8 roles, const LfgDungeonSet& selectedDungeon
 
     // Check if all dungeons are valid
     bool isRaid = false;
+    bool isRandom = false;
     if (joinData.result == LFG_JOIN_OK)
     {
         bool isDungeon = false;
@@ -520,7 +521,10 @@ void LFGMgr::Join(Player* plr, uint8 roles, const LfgDungeonSet& selectedDungeon
                     if (dungeons.size() > 1)               // Only allow 1 random dungeon
                         joinData.result = LFG_JOIN_DUNGEON_INVALID;
                     else
+                    {
                         rDungeonId = (*dungeons.begin());
+                        isRandom = true;
+                    }
                     // No break on purpose (Random can only be dungeon or heroic dungeon)
                 case LFG_TYPE_HEROIC:
                 case LFG_TYPE_DUNGEON:
@@ -636,6 +640,9 @@ void LFGMgr::Join(Player* plr, uint8 roles, const LfgDungeonSet& selectedDungeon
             }
             SetSelectedDungeons(guid, dungeons);
         }
+        if(isRandom)
+            plr->CastSpell(plr, LFG_SPELL_DUNGEON_COOLDOWN, true);
+
         AddToQueue(guid, uint8(plr->GetTeam()));
     }
     sLog->outDebug(LOG_FILTER_LFG, "LFGMgr::Join: [" UI64FMTD "] joined with %u members. dungeons: %u", guid, grp ? grp->GetMembersCount() : 1, uint8(dungeons.size()));
@@ -1733,8 +1740,12 @@ void LFGMgr::TeleportPlayer(Player* plr, bool out, bool fromOpcode /*= false*/)
                 }
 
                 if (plr->TeleportTo(mapid, x, y, z, orientation))
+                {
                     // FIXME - HACK - this should be done by teleport, when teleporting far
                     plr->RemoveAurasByType(SPELL_AURA_MOUNTED);
+                    if(dungeon->type == LFG_TYPE_RANDOM)
+                        plr->CastSpell(plr, LFG_SPELL_LUCK_OF_THE_DRAW, true);
+                }
                 else
                 {
                     error = LFG_TELEPORTERROR_INVALID_LOCATION;
