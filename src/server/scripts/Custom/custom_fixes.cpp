@@ -198,6 +198,35 @@ public:
         return new npc_shredders_takerAI(creature);
     }
 };
+
+/*##########################
+# item_writhing_mass (44304)
+###########################*/
+
+class item_writhing_mass : public ItemScript
+{
+    public:
+
+        item_writhing_mass() : ItemScript("item_writhing_mass") { }
+
+        enum WrithingMassData
+        {
+            QUEST_RETEST_NOW_A = 13321,
+            QUEST_RETEST_NOW_H = 13356,
+            QUEST_RETEST_NOW_A_D = 13322,
+            QUEST_RETEST_NOW_H_D = 13357,
+            NPC_RETEST_NOW_KC = 32266
+        };
+
+        bool OnUse(Player* player, Item* /*item*/, SpellCastTargets const& /*targets*/)
+        {
+            if (player->GetQuestStatus(QUEST_RETEST_NOW_A) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_RETEST_NOW_H) == QUEST_STATUS_INCOMPLETE ||
+                player->GetQuestStatus(QUEST_RETEST_NOW_A_D) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_RETEST_NOW_H_D) == QUEST_STATUS_INCOMPLETE)
+                player->KilledMonsterCredit(NPC_RETEST_NOW_KC,0);
+                return true;
+        }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -205,4 +234,5 @@ void AddSC_custom_fixes()
     new npc_q13355_q13320_trigger;
     new npc_brokendown_shredders;
     new npc_shredders_taker;
+    new item_writhing_mass;
 }
