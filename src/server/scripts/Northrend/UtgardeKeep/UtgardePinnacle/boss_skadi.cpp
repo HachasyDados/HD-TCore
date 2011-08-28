@@ -514,8 +514,22 @@ public:
 
 };
 
+class go_skadi_harpoon : public GameObjectScript
+{
+    public:
+        go_skadi_harpoon() : GameObjectScript("go_skadi_harpoon") {}
+
+        bool OnGossipHello(Player* player, GameObject* go)
+        {
+            player->CastSpell(player, 56790, true);
+            go->RemoveFromWorld();
+            return true;
+        }
+};
+
 void AddSC_boss_skadi()
 {
     new boss_skadi();
     new go_harpoon_launcher();
+    new go_skadi_harpoon();
 }
