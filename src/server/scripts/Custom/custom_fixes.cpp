@@ -2816,6 +2816,98 @@ class at_azure_dragons_sanctuary : public AreaTriggerScript
         }
 };
 
+/*############
+# Quest 10226
+#############*/
+
+enum ElementalPowerExtractorData
+{
+    NPC_WARP_ABERRATION = 18865,
+    NPC_SUNDERED_RUMBLER = 18881,
+    SPELL_ARCANE_SHIELD = 36640,
+    SPELL_WARP_STORM = 36577,
+    SPELL_SUMMON_SUNDERED_SHARD = 35310,
+    SPELL_ELEMENTAL_POWER_EXTRACTOR = 34520,
+    SPELL_CREATE_ELEMENTAL_POWER = 34524,
+    GO_ELEMENTAL_POWER = 183933
+};
+
+class npc_ele_power_extractor : public CreatureScript
+{
+public:
+    npc_ele_power_extractor() : CreatureScript("npc_ele_power_extractor") { }
+
+    struct npc_ele_power_extractorAI : public ScriptedAI
+    {
+        npc_ele_power_extractorAI(Creature* creature) : ScriptedAI(creature) {}
+
+        bool hit;
+        bool add;
+        bool shield;
+        uint32 WarpStormTimer;
+        uint32 ArcaneShieldTimer;
+
+        void Reset()
+        {
+            hit = false;
+            add = false;
+            shield = false;
+            WarpStormTimer = urand(2500,3000);
+            ArcaneShieldTimer = urand(500,1500);
+        }
+
+        void UpdateAI (const uint32 diff)
+        {
+            if (!UpdateVictim())
+                return;
+
+            if (me->GetEntry() == NPC_WARP_ABERRATION)
+            {
+                if (ArcaneShieldTimer <= diff && !shield)
+                {
+                    DoCast(me, SPELL_ARCANE_SHIELD, true);
+                    shield = true;
+                } else ArcaneShieldTimer -= diff;
+
+                if (WarpStormTimer <= diff)
+                {
+                    if (Unit* target = me->getVictim())
+                    {
+                        DoCast(target, SPELL_WARP_STORM, true);
+                        WarpStormTimer = urand(20000,25000);
+                    }
+                } else WarpStormTimer -= diff;
+            }
+
+            if (me->GetEntry() == NPC_SUNDERED_RUMBLER)
+            {
+                if (HealthBelowPct(15) && !add)
+                {
+                    DoCast(me, SPELL_SUMMON_SUNDERED_SHARD, true);
+                    add = true;
+                }
+            }
+            DoMeleeAttackIfReady();
+        }
+
+        void SpellHit (Unit* /*caster*/, const SpellInfo* spell)
+        {
+           if (spell->Id == SPELL_ELEMENTAL_POWER_EXTRACTOR)
+               hit = true;
+        }
+
+        void JustDied (Unit* /*killer*/)
+        {
+            if (hit)
+                me->SummonGameObject(GO_ELEMENTAL_POWER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ()+2, 0.0f, 0, 0, 0, 0 ,25000);
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_ele_power_extractorAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -2860,4 +2952,5 @@ void AddSC_custom_fixes()
     new at_legion_hold_smvalley();
     new npc_feknut_bunny();
     new at_azure_dragons_sanctuary();
+    new npc_ele_power_extractor();
 }
