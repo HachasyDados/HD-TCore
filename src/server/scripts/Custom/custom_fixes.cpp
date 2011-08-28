@@ -130,9 +130,79 @@ public:
     }
 };
 
+/*#################################
+# npc_brokendown_shredders (27354)
+##################################*/
+
+class npc_brokendown_shredders : public CreatureScript
+{
+public:
+    npc_brokendown_shredders() : CreatureScript("npc_brokendown_shredders") { }
+
+    struct npc_brokendown_shreddersAI : public ScriptedAI
+    {
+        npc_brokendown_shreddersAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            Unit* player = me->GetVehicleKit()->GetPassenger(0);
+                    if (!player && ((me->GetPositionX() != me->GetHomePosition().GetPositionX()) && (me->GetPositionY() != me->GetHomePosition().GetPositionY()) && (me->GetPositionZ() != me->GetHomePosition().GetPositionZ())))
+            {
+                me->DisappearAndDie();
+                me->Respawn();
+                return;
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_brokendown_shreddersAI(creature);
+    }
+};
+
+/*#################################
+# npc_shredders_taker (27371, 2742)
+##################################*/
+
+class npc_shredders_taker : public CreatureScript
+{
+public:
+    npc_shredders_taker() : CreatureScript("npc_shredders_taker") { }
+
+    struct npc_shredders_takerAI : public ScriptedAI
+    {
+        npc_shredders_takerAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void MoveInLineOfSight(Unit* who)
+        {
+            if(!who)
+                return;
+
+            if (who->GetTypeId() != TYPEID_UNIT || who->GetEntry() != 27354 || !who->isCharmedOwnedByPlayerOrPlayer())
+                return;
+
+            Player* player = who->GetCharmerOrOwner()->ToPlayer();
+
+            if (player && me->IsWithinDistInMap(who, 15.0f))
+            {
+                player->KilledMonsterCredit(27396, 0);
+                player->ExitVehicle();
+                who->ToCreature()->DisappearAndDie();
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_shredders_takerAI(creature);
+    }
+};
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
     new item_alumeths_remains;
     new npc_q13355_q13320_trigger;
+    new npc_brokendown_shredders;
+    new npc_shredders_taker;
 }
