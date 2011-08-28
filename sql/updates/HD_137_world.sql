@@ -1,0 +1,1 @@
+UPDATE `gameobject_template` SET `ScriptName` = 'go_skadi_harpoon' WHERE `entry` = 192539;
