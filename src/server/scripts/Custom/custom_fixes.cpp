@@ -1223,6 +1223,142 @@ class go_iron_rune_construct_workbank : public GameObjectScript
         }
 };
 
+/*############
+# npc_terokk
+#############*/
+
+enum TerokkData
+{
+    SPELL_CLEAVE = 15284,
+    SPELL_DIVINE_SHIELD = 40733,
+    SPELL_FRENZY = 28747,
+    SPELL_SHADOW_BOLT_VOLLEY = 40721,
+    SPELL_WILL_OF_THE_ARAKKOA = 40722,
+    SPELL_VISUAL_MARKER = 40656,
+    NPC_MARKER_TRIGGER = 97016,
+    SAY_SUMMONED = 0,
+    SAY_CHOSEN = 1,
+    SAY_IMMUNE = 2
+};
+
+class npc_terokk : public CreatureScript
+{
+public:
+    npc_terokk() : CreatureScript("npc_terokk") {}
+
+    struct npc_terokkAI : public ScriptedAI
+    {
+        npc_terokkAI(Creature* creature) : ScriptedAI(creature) {}
+
+        bool inCombat;
+        bool Chosen;
+        bool isImmune;
+        uint32 CleaveTimer;
+        uint32 VolleyTimer;
+        uint32 ShieldTimer;
+        uint32 MarkerTimer;
+
+        void Reset()
+        {
+            inCombat = false;
+            Chosen = false;
+            isImmune = false;
+            CleaveTimer = 5000;
+            VolleyTimer = 3000;
+            ShieldTimer = 999999;
+            MarkerTimer = 15000;
+        }
+
+        void EnterCombat (Unit* /*who*/)
+        {
+            if (!inCombat)
+            {
+                Talk(SAY_SUMMONED);
+                inCombat = true;
+            }
+        }
+
+        void UpdateAI (const uint32 diff)
+        {
+            if (!UpdateVictim())
+                return;
+
+            if (CleaveTimer <= diff)
+            {
+                DoCast(me->getVictim(),SPELL_CLEAVE);
+                CleaveTimer = urand(9000,15000);
+            } else CleaveTimer -= diff;
+
+            if (VolleyTimer <= diff)
+            {
+                DoCast(me, SPELL_SHADOW_BOLT_VOLLEY);
+                VolleyTimer = urand(12000,20000);
+            } else VolleyTimer -= diff;
+
+            if (MarkerTimer <= diff)
+            {
+                switch (urand(1,4))
+                {
+                    case 1:
+                        if (Creature* trigger = me->SummonCreature(NPC_MARKER_TRIGGER,me->GetPositionX()+30,me->GetPositionY(),me->GetPositionZ(),0.0f,TEMPSUMMON_TIMED_DESPAWN,30000))
+                            trigger->AddAura(SPELL_VISUAL_MARKER,trigger);
+                            break;
+                    case 2:
+                        if (Creature* trigger = me->SummonCreature(NPC_MARKER_TRIGGER,me->GetPositionX(),me->GetPositionY()+30,me->GetPositionZ(),0.0f,TEMPSUMMON_TIMED_DESPAWN,30000))
+                            trigger->AddAura(SPELL_VISUAL_MARKER,trigger);
+                            break;
+                    case 3:
+                        if (Creature* trigger = me->SummonCreature(NPC_MARKER_TRIGGER,me->GetPositionX()-30,me->GetPositionY(),me->GetPositionZ(),0.0f,TEMPSUMMON_TIMED_DESPAWN,30000))
+                            trigger->AddAura(SPELL_VISUAL_MARKER,trigger);
+                            break;
+                    case 4:
+                        if (Creature* trigger = me->SummonCreature(NPC_MARKER_TRIGGER,me->GetPositionX(),me->GetPositionY()-30,me->GetPositionZ(),0.0f,TEMPSUMMON_TIMED_DESPAWN,30000))
+                            trigger->AddAura(SPELL_VISUAL_MARKER,trigger);
+                            break;
+                }
+                MarkerTimer = urand(25000,30000);
+            } else MarkerTimer -= diff;
+
+            if (HealthBelowPct(50) && !Chosen)
+            {
+                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM,0))
+                {
+                    if (target && target->isAlive())
+                    {
+                        Talk(SAY_CHOSEN);
+                        DoCast(target, SPELL_WILL_OF_THE_ARAKKOA);
+                        Chosen = true;
+                    }
+                }
+            }
+
+            if (HealthBelowPct(25) && !isImmune)
+            {
+                if (ShieldTimer <= diff)
+                {
+                    Talk(SAY_IMMUNE);
+                    DoCast(me, SPELL_DIVINE_SHIELD);
+                    ShieldTimer = 60000;
+                    isImmune = true;
+                } else ShieldTimer -= diff;
+            }
+
+            if (me->FindNearestCreature(NPC_MARKER_TRIGGER,5.0f,true) && isImmune)
+            {
+                me->RemoveAura(SPELL_DIVINE_SHIELD);
+                DoCast(me, SPELL_FRENZY);
+                isImmune = false;
+            }
+            DoMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_terokkAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1244,4 +1380,5 @@ void AddSC_custom_fixes()
     new npc_iron_rune_construct();
     new npc_lebronski();
     new go_iron_rune_construct_workbank();
+    new npc_terokk();
 }
