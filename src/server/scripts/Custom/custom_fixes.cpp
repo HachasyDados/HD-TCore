@@ -227,6 +227,77 @@ class item_writhing_mass : public ItemScript
         }
 };
 
+/*##########################
+# npc_rocket_warhead (27593)
+###########################*/
+
+class npc_rocket_warhead : public CreatureScript
+{
+public:
+    npc_rocket_warhead() : CreatureScript("npc_rocket_warhead") { }
+
+    struct npc_rocket_warheadAI : public ScriptedAI
+    {
+        npc_rocket_warheadAI(Creature* creature) : ScriptedAI(creature) { }
+
+        bool occupied;
+
+        void Reset()
+        {
+            occupied = false;
+            me->SetHover(true);
+        }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            if(!occupied)
+                return;
+
+            Unit* player = me->GetVehicleKit()->GetPassenger(0);
+
+            if(!player)
+            {
+                me->DisappearAndDie();
+                return;
+            }
+
+            if(player && !me->HasAura(49181, 0)) // Time-Out and no boat reached
+            {
+                player->ExitVehicle();
+                DoCast(71945);            // Visual
+                me->DespawnOrUnsummon(1500);
+                return;
+            }
+
+            Unit* pBombTarget;
+            switch(player->ToPlayer()->GetTeam())
+            {
+                case ALLIANCE: pBombTarget = me->FindNearestCreature(27702, 8.0f); break;
+                case HORDE: pBombTarget = me->FindNearestCreature(27688, 8.0f); break;
+            }
+
+            if(player && pBombTarget)
+            {
+                player->ToPlayer()->KilledMonsterCredit(pBombTarget->GetEntry(), 0);
+                player->ExitVehicle();
+                DoCast(71945);            // Visual
+                me->DespawnOrUnsummon(1500);
+            }
+        }
+
+        void PassengerBoarded(Unit* /*passenger*/, int8 /*seatId*/, bool /*apply*/)
+        {
+            me->AddAura(49181, me);
+            occupied = true;
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_rocket_warheadAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -235,4 +306,5 @@ void AddSC_custom_fixes()
     new npc_brokendown_shredders;
     new npc_shredders_taker;
     new item_writhing_mass;
+    new npc_rocket_warhead;
 }
