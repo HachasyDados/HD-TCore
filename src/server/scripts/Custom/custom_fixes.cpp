@@ -2908,6 +2908,80 @@ public:
     }
 };
 
+/*##########
+# Quest 4506
+###########*/
+
+enum CorruptedSabersData
+{
+    NPC_COMMON_KITTEN = 9937,
+    NPC_CORRUPTED_SABER = 10657,
+    NPC_WINNA_HAZZARD = 9996,
+    ZONE_FELWOOD = 361,
+    QUEST_CORRUPTED_SABERS = 4506,
+};
+
+class npc_q4506_cat : public CreatureScript
+{
+public:
+    npc_q4506_cat() : CreatureScript("npc_q4506_cat") { }
+
+    struct npc_q4506_catAI : public ScriptedAI
+    {
+        npc_q4506_catAI(Creature* creature) : ScriptedAI(creature) {}
+
+        uint32 CorruptionTime;
+        bool QuestGiverFound;
+
+        void Reset()
+        {
+            me->SetReactState(REACT_PASSIVE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+            CorruptionTime = 5000;
+            QuestGiverFound = false;
+        }
+
+        void UpdateAI (const uint32 diff)
+        {
+            if (CorruptionTime <= diff && me->GetEntry() == NPC_COMMON_KITTEN)
+            {
+                me->UpdateEntry(NPC_CORRUPTED_SABER);
+                if (Unit* owner = me->GetOwner())
+                {
+                    me->SetLevel(me->GetOwner()->getLevel());
+                    me->SetFullHealth();
+                }
+            }
+            else CorruptionTime -= diff;
+
+            if (Creature* Winna = me->FindNearestCreature(NPC_WINNA_HAZZARD, 10.0f, true))
+                QuestGiverFound = true;
+
+            if (me->GetEntry() == NPC_CORRUPTED_SABER)
+            {
+                if (Unit* owner = me->GetOwner())
+                {
+                    if (owner->GetTypeId() != TYPEID_PLAYER || !owner->isAlive() || owner->ToPlayer()->GetZoneId() != ZONE_FELWOOD)
+                        me->DespawnOrUnsummon();
+                }
+            }
+
+            if (QuestGiverFound)
+            {
+                if (Player* owner = me->GetOwner()->ToPlayer())
+                {
+                    owner->ToPlayer()->GroupEventHappens(QUEST_CORRUPTED_SABERS, me);
+                    me->DespawnOrUnsummon(3000);
+                }
+            }
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_q4506_catAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -2953,4 +3027,5 @@ void AddSC_custom_fixes()
     new npc_feknut_bunny();
     new at_azure_dragons_sanctuary();
     new npc_ele_power_extractor();
+    new npc_q4506_cat();
 }
