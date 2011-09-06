@@ -3086,6 +3086,39 @@ public:
     }
 };
 
+/*##########
+# npc_moodle
+###########*/
+
+enum MoodleData
+{
+    AREA_MOSSWALKER_VILLAGE = 4297,
+    QUEST_THE_ANGRY_GORLOC = 12578
+};
+
+class npc_moodle : public CreatureScript
+{
+public:
+    npc_moodle() : CreatureScript("npc_moodle") { }
+
+    struct npc_moodleAI : public ScriptedAI
+    {
+        npc_moodleAI(Creature* creature) : ScriptedAI(creature) {}
+
+        void Reset()
+        {
+            if (Unit* owner = me->GetOwner())
+                if (owner->GetTypeId() == TYPEID_PLAYER)
+                    if (owner->ToPlayer()->GetAreaId() == AREA_MOSSWALKER_VILLAGE && owner->ToPlayer()->GetQuestStatus(QUEST_THE_ANGRY_GORLOC) == QUEST_STATUS_INCOMPLETE)
+                        owner->ToPlayer()->GroupEventHappens(QUEST_THE_ANGRY_GORLOC, me);
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_moodleAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3134,4 +3167,5 @@ void AddSC_custom_fixes()
     new npc_q4506_cat();
     new spell_song_of_cleansing();
     new spell_contact_brann();
+    new npc_moodle();
 }
