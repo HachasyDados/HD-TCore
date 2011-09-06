@@ -1,0 +1,1 @@
+UPDATE creature_template SET ScriptName='npc_moodle' WHERE entry=28122;
