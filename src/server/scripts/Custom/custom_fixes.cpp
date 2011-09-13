@@ -147,7 +147,7 @@ public:
         void UpdateAI(const uint32 /*diff*/)
         {
             Unit* player = me->GetVehicleKit()->GetPassenger(0);
-                    if (!player && ((me->GetPositionX() != me->GetHomePosition().GetPositionX()) && (me->GetPositionY() != me->GetHomePosition().GetPositionY()) && (me->GetPositionZ() != me->GetHomePosition().GetPositionZ())))
+            if (!player && ((me->GetPositionX() != me->GetHomePosition().GetPositionX()) && (me->GetPositionY() != me->GetHomePosition().GetPositionY()) && (me->GetPositionZ() != me->GetHomePosition().GetPositionZ())))
             {
                 me->DisappearAndDie();
                 me->Respawn();
@@ -1505,7 +1505,7 @@ const Position posKeristrasza[6] =
     {4063.72f, 7084.12f, 174.86f, 0.00f}, // Land position
     {4054.51f, 7084.29f, 168.12f, 0.00f}, // Burn Corpse positon
     {4048.90f, 7083.94f, 168.21f, 0.00f}, // Saragosa Corpse Spawn
-    {3800.47f, 6557.50f, 170.98f, 1.55f}, // Keristrasza 2º Spawn
+    {3800.47f, 6557.50f, 170.98f, 1.55f}, // Keristrasza 2nd Spawn
     {3791.76f, 6603.61f, 179.91f, 0.00f}, // Malygos Spawn
 };
 class npc_signal_fire : public CreatureScript
@@ -2653,11 +2653,11 @@ public:
         {
             case 801054:
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"Volver a la entrada del Recinto de los Esclavos",GOSSIP_SENDER_CHECK,GOSSIP_ACTION_INFO_DEF+1);
-                                break;
+                break;
             case 801055:
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"Ir a la zona de Ahune",GOSSIP_SENDER_CHECK,GOSSIP_ACTION_INFO_DEF+2);
                 break;
-         }
+        }
         player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE,go->GetGUID());
         return true;
     }
@@ -3176,6 +3176,184 @@ public:
     }
 };
 
+/*###########################
+# npc_dragonforged_blades_giver (Quel'Delar quest chain)
+############################*/
+
+enum DragonforgedBlades
+{
+    QUEST_MEETING_ARCANIST   = 24451, // Quest Horde side
+    QUEST_MEETING_MAGISTER   = 20439, // Quest Alliance side
+    SPELL_SUNREAVER_DISGUISE = 69672, // Casted on Alliance players
+    SPELL_SILVER_DISGUISE    = 69672, // Casted on Horde players
+    AURA_SUNREAVER_DIS_F     = 70973, // Aura on Alliance palyers (male)
+    AURA_SUNREAVER_DIS_M     = 70974, // Aura on Alliance palyers (female)
+    AURA_SILVER_DIS_F        = 70971, // Aura on Horde palyers (male)
+    AURA_SILVER_DIS_M        = 70972, // Aura on Horde palyers (female)
+    NPC_MAGISTER_HATHOREL    = 36670, // Horde npc
+    NPC_ARCANIST_TYBALIN     = 36669, // Alliance npc
+    ITEM_DRAGONFORGED_BLADES = 49698,
+    SPELL_CREATE_BOOK        = 69722,
+
+    TEXT_ID_GIVE_BOOK_ALLI   = 537554,
+    TEXT_ID_GIVE_BOOK_HORDE  = 537555,
+
+    SAY_1_COMMON             = -1380573,
+    SAY_2_HORDE              = -1380574,
+    SAY_2_ALLIANCE           = -1380575,
+    SAY_3_HORDE              = -1380576,
+    SAY_3_ALLIANCE           = -1380577,
+};
+
+#define GOSSIP_ITEM_TABARD    "Necesito volver a encantar mi tabardo."
+#define GOSSIP_ITEM_REQUEST_A "Entregaré el tomo a nuestros contactos en Corona de hielo, arcanista."
+#define GOSSIP_ITEM_REQUEST_H "Entregaré el tomo a nuestros contactos en Corona de hielo, magister."
+
+class npc_dragonforged_blades_giver : public CreatureScript
+{
+public:
+    npc_dragonforged_blades_giver() : CreatureScript("npc_dragonforged_blades_giver") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_dragonforged_blades_giverAI(creature);
+    }
+
+        bool OnGossipHello(Player* player, Creature* creature)
+        {
+            uint32 menuTextId = player->GetGossipTextId(creature);
+
+            if(creature->isQuestGiver())
+                player->PrepareQuestMenu( creature->GetGUID());
+
+            switch(creature->GetEntry())
+            {
+                case NPC_ARCANIST_TYBALIN:
+                    switch(player->GetTeam())
+                    {
+                        case ALLIANCE:
+                            if(player->GetQuestStatus(QUEST_MEETING_MAGISTER) == QUEST_STATUS_INCOMPLETE)
+                                if(!player->HasAura(AURA_SUNREAVER_DIS_M) || !player->HasAura(AURA_SUNREAVER_DIS_F))
+                                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_TABARD, GOSSIP_ITEM_TABARD, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+                            break;
+                        case HORDE:
+                            if(player->GetQuestStatus(QUEST_MEETING_ARCANIST) == QUEST_STATUS_INCOMPLETE)
+                            {
+                                menuTextId = TEXT_ID_GIVE_BOOK_ALLI;
+                                if(!player->HasItemCount(ITEM_DRAGONFORGED_BLADES, 1, true))
+                                    if(player->HasAura(AURA_SILVER_DIS_M) || player->HasAura(AURA_SILVER_DIS_F))
+                                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_REQUEST_A, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                            }
+                            break;
+                    }
+                    break;
+                case NPC_MAGISTER_HATHOREL:
+                    switch(player->GetTeam())
+                    {
+                        case HORDE:
+                            if(player->GetQuestStatus(QUEST_MEETING_ARCANIST) == QUEST_STATUS_INCOMPLETE)
+                                if(!player->HasAura(AURA_SILVER_DIS_M) || !player->HasAura(AURA_SILVER_DIS_F))
+                                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_TABARD, GOSSIP_ITEM_TABARD, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+                            break;
+                        case ALLIANCE:
+                            if(player->GetQuestStatus(QUEST_MEETING_MAGISTER) == QUEST_STATUS_INCOMPLETE)
+                            {
+                                menuTextId = TEXT_ID_GIVE_BOOK_HORDE;
+                                if(!player->HasItemCount(ITEM_DRAGONFORGED_BLADES, 1, true))
+                                    if(player->HasAura(AURA_SUNREAVER_DIS_M) || player->HasAura(AURA_SUNREAVER_DIS_F))
+                                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_REQUEST_A, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                            }
+                            break;
+                    }
+                    break;
+            }
+            player->SEND_GOSSIP_MENU(menuTextId, creature->GetGUID());
+            return true;
+        }
+
+        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 action)
+        {
+            player->PlayerTalkClass->ClearMenus();
+
+            switch(action)
+            {
+                case GOSSIP_ACTION_INFO_DEF:
+                    switch(creature->GetEntry())
+                    {
+                        case NPC_ARCANIST_TYBALIN: creature->CastSpell(player, SPELL_SUNREAVER_DISGUISE, true); break;
+                        case NPC_MAGISTER_HATHOREL: creature->CastSpell(player, SPELL_SILVER_DISGUISE, true); break;
+                    }
+                    break;
+                case GOSSIP_ACTION_INFO_DEF+1:
+                    creature->AI()->SetGUID(player->GetGUID(), 1);
+                    creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    break;
+            }
+
+            player->CLOSE_GOSSIP_MENU();
+            return true;
+        }
+
+    struct npc_dragonforged_blades_giverAI : public ScriptedAI
+    {
+        npc_dragonforged_blades_giverAI(Creature* c) : ScriptedAI(c) {}
+
+        EventMap events;
+        uint64 playerGUID;
+        bool inProgress;
+
+        void Reset()
+        {
+            me->SetTarget(0);
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            inProgress = false;
+            events.Reset();
+            playerGUID = 0;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            events.Update(diff);
+
+            switch(events.ExecuteEvent())
+            {
+                case 1:
+                    DoScriptText(SAY_1_COMMON, me);
+                    events.ScheduleEvent(2, 5000);
+                    break;
+                case 2:
+                    DoScriptText(me->GetEntry() == NPC_ARCANIST_TYBALIN ? SAY_2_HORDE : SAY_2_ALLIANCE, me);
+                    if(Player* player = me->GetPlayer(*me, playerGUID))
+                        DoCast(player, SPELL_CREATE_BOOK, true);
+                    events.ScheduleEvent(3, 6000);
+                    break;
+                case 3:
+                    DoScriptText(me->GetEntry() == NPC_ARCANIST_TYBALIN ? SAY_3_HORDE : SAY_3_ALLIANCE, me);
+                    events.ScheduleEvent(4, 3000);
+                    break;
+                case 4:
+                    Reset();
+                    break;
+            }
+        }
+
+        void SetGUID(const uint64 guid, int32 id)
+        {
+            if(inProgress)
+                return;
+
+            if(id == 1)
+            {
+                events.ScheduleEvent(1, 0);
+                playerGUID = guid;
+                me->SetTarget(playerGUID);
+                inProgress = true;
+            }
+        }
+    };
+
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3226,4 +3404,5 @@ void AddSC_custom_fixes()
     new spell_contact_brann();
     new npc_moodle();
     new spell_construct_barricade();
+    new npc_dragonforged_blades_giver();
 }
