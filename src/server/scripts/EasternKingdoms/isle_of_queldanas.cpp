@@ -359,7 +359,7 @@ public:
               }
 
         void SummonWave(uint32 entry)
-               {
+         {
                               if (Creature* pThalorien = me->GetCreature(*me, uiThalorien))
                                   {
                                               if (Creature* pZombie = me->SummonCreature(entry, 11768.7f, -7065.83f, 24.0971f, 0.125877f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0))
@@ -373,7 +373,7 @@ public:
                                                       pZombie->SetPhaseMask(2,true);
                                                  pZombie->AddThreat(pThalorien, 100);
                                                    pZombie->AI()->AttackStart(pThalorien);
-                                                        // Super Ñapa!
+                                                        // Super ?apa!
                                                  if (pZombie->GetEntry() == 37541)
                                                               pZombie->DisappearAndDie();
                                             }
@@ -388,7 +388,7 @@ public:
                                                       pZombie->SetPhaseMask(2,true);
                                                  pZombie->AddThreat(pThalorien, 100);
                                                    pZombie->AI()->AttackStart(pThalorien);
-                                                        // Super Ñapa!
+                                                        // Super ?apa!
                                                  if (pZombie->GetEntry() == 37541)
                                                               pZombie->DisappearAndDie();
                                             }
@@ -410,11 +410,13 @@ public:
                       if (summon->GetEntry() == 37542)
                                events.ScheduleEvent(13, 3000);
                 }
-              void SetGUID(const uint64 &uiGuid, int32 /*iId*/)
-              {
-                      uiPlayer = uiGuid;
-             }
-              void DoAction(const int32 actionId)
+
+             void SetGUID(const uint64 guid, int32 /*id*/)
+          {
+                      uiPlayer = guid;
+               }
+
+             void DoAction(const int32 actionId)
             {
                       switch(actionId)
                        {
