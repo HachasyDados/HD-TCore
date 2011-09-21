@@ -2172,6 +2172,7 @@ public:
 #define GOSSIP_ENGINEERING3   "Sholazar Basin."
 #define GOSSIP_ENGINEERING4   "Icecrown."
 #define GOSSIP_ENGINEERING5   "Storm Peaks."
+#define GOSSIP_ENGINEERING6   "Underground."
 
 enum eWormhole
 {
@@ -2199,6 +2200,8 @@ public:
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ENGINEERING3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ENGINEERING4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ENGINEERING5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 5);
+                if (urand(0,3) == 3)
+                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ENGINEERING6, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 6);
 
                 player->PlayerTalkClass->SendGossipMenu(TEXT_WORMHOLE, creature->GetGUID());
             }
@@ -2235,6 +2238,10 @@ public:
             case GOSSIP_ACTION_INFO_DEF + 5: //Storm peaks
                 player->CLOSE_GOSSIP_MENU();
                 player->CastSpell(player, SPELL_STORM_PEAKS, true);
+                break;
+            case GOSSIP_ACTION_INFO_DEF + 6: // Underground
+                player->CLOSE_GOSSIP_MENU();
+                player->TeleportTo(571, 5860.715820f, 513.231628f, 599.817993f, 2.514055f);
                 break;
         }
         return true;
