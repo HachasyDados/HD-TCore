@@ -2982,6 +2982,62 @@ public:
     }
 };
 
+/*########################
+# spell_song_of_cleansing
+#########################*/
+
+enum CleansingSongData
+{
+    SPELL_SONG_OF_CLEANSING = 52941,
+    NPC_SPIRIT_OF_ATHA = 29033,
+    NPC_SPIRIT_OF_HA_KHALAN = 29018,
+    NPC_SPIRIT_OF_KOOSU = 29034,
+    AREA_RIVERS_HEART = 4290,
+    AREA_LAKE = 4385,
+    AREA_WINTERGRASP_RIVER = 4388
+};
+
+class spell_song_of_cleansing : public SpellScriptLoader
+{
+public:
+    spell_song_of_cleansing() : SpellScriptLoader("spell_song_of_cleansing") {}
+
+    class spell_song_of_cleansing_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_song_of_cleansing_SpellScript)
+
+        bool Validate(SpellInfo const* /*spell*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_SONG_OF_CLEANSING))
+                return false;
+            return true;
+        }
+
+        void HandleScriptEffect(SpellEffIndex effIndex)
+        {
+            PreventHitDefaultEffect(effIndex);
+            if (Unit* caster = GetCaster())
+                if (Player* player = caster->ToPlayer())
+                    switch (player->GetAreaId())
+                    {
+                       case AREA_RIVERS_HEART: caster->SummonCreature(NPC_SPIRIT_OF_HA_KHALAN, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000); break;
+                       case AREA_LAKE: caster->SummonCreature(NPC_SPIRIT_OF_ATHA, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000); break;
+                       case AREA_WINTERGRASP_RIVER: caster->SummonCreature(NPC_SPIRIT_OF_KOOSU, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000); break;
+                    }
+        }
+
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_song_of_cleansing_SpellScript::HandleScriptEffect, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_song_of_cleansing_SpellScript();
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3028,4 +3084,5 @@ void AddSC_custom_fixes()
     new at_azure_dragons_sanctuary();
     new npc_ele_power_extractor();
     new npc_q4506_cat();
+    new spell_song_of_cleansing();
 }
