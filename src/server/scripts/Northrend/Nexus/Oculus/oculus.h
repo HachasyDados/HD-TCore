@@ -32,7 +32,10 @@ enum Data64
     DATA_DRAKOS,
     DATA_VAROS,
     DATA_UROM,
-    DATA_EREGOS
+    DATA_EREGOS,
+
+    DATA_DRAKE_IN_USE,
+    DATA_DRAKE_NOT_IN_USE,
 };
 
 enum Bosses
@@ -48,9 +51,10 @@ enum Bosses
 
 enum GameObjects
 {
-    GO_DRAGON_CAGE_DOOR                           = 193995,
-    GO_EREGOS_CACHE_N                             = 191349,
-    GO_EREGOS_CACHE_H                             = 193603
+    GO_DRAGON_CAGE_DOOR   = 193995,
+    GO_EREGOS_CACHE_N     = 191349,
+    GO_EREGOS_CACHE_H     = 193603,
+    GO_CACHE_SPOTLIGHT    = 191351,
 };
 
 enum SpellEvents
@@ -60,7 +64,8 @@ enum SpellEvents
 
 enum CreatureActions
 {
-    ACTION_CALL_DRAGON_EVENT = 1
+    ACTION_CALL_DRAGON_EVENT = 1,
+    ACTION_ARCANE_BEAM,
 };
 
 enum OculusWorldStates
@@ -72,5 +77,12 @@ enum OculusWorldStates
 enum OculusSpells
 {
     SPELL_CENTRIFUGE_SHIELD = 50053
+};
+
+enum VehicleDrakes
+{
+    NPC_RUBY_DRAKE_VEHICLE    = 27756,
+    NPC_AMBER_DRAKE_VEHICLE   = 27755,
+    NPC_EMERALD_DRAKE_VEHICLE = 27692,
 };
 #endif
