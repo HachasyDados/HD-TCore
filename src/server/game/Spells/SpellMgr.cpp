@@ -3130,6 +3130,12 @@ void SpellMgr::LoadDbcDataCorrections()
             case 51904: // Summon Ghouls On Scarlet Crusade (this should use conditions table, script for this spell needs to be fixed)
                 spellInfo->EffectImplicitTargetA[0] = TARGET_UNIT_CASTER;
                 break;
+            case 45671: // Midsummer - Juggle Torch (Catch, Quest)
+                spellInfo->AttributesEx3 &= ~SPELL_ATTR3_ONLY_TARGET_PLAYERS;
+                break;
+            case 45907: // Midsummer - Torch Target Picker
+                spellInfo->AttributesEx &= ~SPELL_ATTR1_CANT_TARGET_SELF;
+                break;
             case 29809: // Desecration Arm - 36 instead of 37 - typo? :/
                 spellInfo->EffectRadiusIndex[0] = EFFECT_RADIUS_7_YARDS;
                 break;
