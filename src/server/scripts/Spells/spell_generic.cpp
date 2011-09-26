@@ -828,7 +828,89 @@ class spell_gen_dungeon_credit : public SpellScriptLoader
             return new spell_gen_dungeon_credit_SpellScript();
         }
 };
+enum eDalaranDisguises
+{
+    SPELL_SILVER_CONVENANT_MALE    = 70972,
+    SPELL_SILVER_CONVENANT_FEMALE  = 70971,
+    SPELL_SUNREAVERS_MALE          = 70974,
+    SPELL_SUNREAVERS_FEMALE        = 70973,
+};
+class spell_sunreaver_disguise : public SpellScriptLoader
+{
+public:
+    spell_sunreaver_disguise() : SpellScriptLoader("spell_sunreaver_disguise") {}
 
+    class spell_sunreaver_disguise_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_sunreaver_disguise_SpellScript)
+        bool Validate(SpellInfo const * /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_SUNREAVERS_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_SUNREAVERS_FEMALE))
+                return false;
+            return true;
+        }
+
+        void HandleScript(SpellEffIndex /*effIndex*/)
+        {
+            if (Player* target = GetHitPlayer())
+            {
+                uint8 gender = target->getGender();
+                uint32 spellId;
+                              spellId = gender ? SPELL_SUNREAVERS_FEMALE : SPELL_SUNREAVERS_MALE;
+                GetCaster()->CastSpell(target, spellId, true, NULL);
+            }
+        }
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_sunreaver_disguise_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_sunreaver_disguise_SpellScript();
+    }
+};
+class spell_silvert_convenant_disguise : public SpellScriptLoader
+{
+public:
+    spell_silvert_convenant_disguise() : SpellScriptLoader("spell_silvert_convenant_disguise") {}
+
+    class spell_silvert_convenant_disguise_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_silvert_convenant_disguise_SpellScript)
+        bool Validate(SpellInfo const * /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_SILVER_CONVENANT_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_SILVER_CONVENANT_FEMALE))
+                return false;
+            return true;
+        }
+
+        void HandleScript(SpellEffIndex /*effIndex*/)
+        {
+            if (Player* target = GetHitPlayer())
+            {
+                uint8 gender = target->getGender();
+                uint32 spellId;
+                spellId = gender ? SPELL_SILVER_CONVENANT_FEMALE : SPELL_SILVER_CONVENANT_MALE;
+                GetCaster()->CastSpell(target, spellId, true, NULL);
+            }
+        }
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_silvert_convenant_disguise_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_silvert_convenant_disguise_SpellScript();
+    }
+};
 class spell_gen_profession_research : public SpellScriptLoader
 {
     public:
@@ -1379,6 +1461,8 @@ void AddSC_generic_spell_scripts()
     new spell_gen_parachute_ic();
     new spell_gen_gunship_portal();
     new spell_gen_dungeon_credit();
+    new spell_sunreaver_disguise();
+    new spell_silvert_convenant_disguise();
     new spell_gen_profession_research();
     new spell_generic_clone();
     new spell_generic_clone_weapon();
