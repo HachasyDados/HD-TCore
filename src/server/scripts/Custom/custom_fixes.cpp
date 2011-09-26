@@ -3038,6 +3038,54 @@ public:
     }
 };
 
+/*####################
+# spell_contact_brann
+#####################*/
+
+enum ContactBrannData
+{
+    SPELL_CONTACT_BRANN = 61122,
+    NPC_BRANN = 29579,
+    ZONE_STORM_PEAKS = 67
+};
+
+class spell_contact_brann : public SpellScriptLoader
+{
+public:
+    spell_contact_brann() : SpellScriptLoader("spell_contact_brann") {}
+
+    class spell_contact_brann_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_contact_brann_SpellScript)
+
+        bool Validate(SpellInfo const* /*spell*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_CONTACT_BRANN))
+                return false;
+            return true;
+        }
+
+        void HandleScriptEffect(SpellEffIndex effIndex)
+        {
+            PreventHitDefaultEffect(effIndex);
+            if (Unit* caster = GetCaster())
+               if (caster->ToPlayer())
+                   if (caster->ToPlayer()->GetZoneId() == ZONE_STORM_PEAKS)
+                       caster->SummonCreature(NPC_BRANN, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 120000);
+        }
+
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_contact_brann_SpellScript::HandleScriptEffect, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_contact_brann_SpellScript();
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3085,4 +3133,5 @@ void AddSC_custom_fixes()
     new npc_ele_power_extractor();
     new npc_q4506_cat();
     new spell_song_of_cleansing();
+    new spell_contact_brann();
 }
