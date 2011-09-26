@@ -1359,6 +1359,56 @@ public:
     }
 };
 
+/*###################
+# spell_fumping_39238
+####################*/
+
+enum FumpingSpellData
+{
+    SPELL_FUMPING = 39238,
+    NPC_MATURE_BONE_SIFTER = 22482,
+    NPC_SAND_GNOME = 22483
+};
+
+class spell_fumping_39238 : public SpellScriptLoader
+{
+public:
+    spell_fumping_39238() : SpellScriptLoader("spell_fumping_39238") {}
+
+    class spell_fumping_39238SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_fumping_39238SpellScript)
+
+        bool Validate(SpellInfo const * /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_FUMPING))
+                return false;
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex /*effIndex*/)
+        {
+            if (Unit* player = GetCaster())
+            {
+                switch (urand(1,2))
+                {
+                    case 1: player->SummonCreature(NPC_MATURE_BONE_SIFTER, player->GetPositionX()+rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_DEAD_DESPAWN, 0); break;
+                    case 2: player->SummonCreature(NPC_SAND_GNOME, player->GetPositionX()+rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_DEAD_DESPAWN, 0); break;
+                }
+            }
+        }
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_fumping_39238SpellScript::HandleDummy, EFFECT_ALL, SPELL_EFFECT_ANY);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_fumping_39238SpellScript();
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1381,4 +1431,5 @@ void AddSC_custom_fixes()
     new npc_lebronski();
     new go_iron_rune_construct_workbank();
     new npc_terokk();
+    new spell_fumping_39238();
 }
