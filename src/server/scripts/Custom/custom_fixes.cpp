@@ -17,6 +17,7 @@
 
 #include "ScriptPCH.h"
 #include "Vehicle.h"
+#include "ScriptedEscortAI.h"
 
 /*#####################
 # go_not_a_bug (193939)
@@ -1920,6 +1921,764 @@ public:
     }
 };
 
+/*###################################
+# spell_gen_ribbon_pole_dancer_check
+####################################*/
+
+enum RibbonPoleData
+{
+    SPELL_HAS_FULL_MIDSUMMER_SET        = 58933,
+    SPELL_BURNING_HOT_POLE_DANCE        = 58934,
+    SPELL_RIBBON_DANCE                  = 29175,
+    GO_RIBBON_POLE                      = 181605
+};
+
+class spell_gen_ribbon_pole_dancer_check : public SpellScriptLoader
+{
+    public:
+        spell_gen_ribbon_pole_dancer_check() : SpellScriptLoader("spell_gen_ribbon_pole_dancer_check") { }
+
+        class spell_gen_ribbon_pole_dancer_check_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_gen_ribbon_pole_dancer_check_AuraScript);
+
+            bool Validate(SpellInfo const* /*spell*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_HAS_FULL_MIDSUMMER_SET))
+                    return false;
+                if (!sSpellMgr->GetSpellInfo(SPELL_BURNING_HOT_POLE_DANCE))
+                    return false;
+                if (!sSpellMgr->GetSpellInfo(SPELL_RIBBON_DANCE))
+                    return false;
+                return true;
+            }
+
+            void PeriodicTick(AuraEffect const* /*aurEff*/)
+            {
+                Unit* target = GetTarget();
+
+                if (!target)
+                    return;
+
+                // check if aura needs to be removed
+                if (!target->FindNearestGameObject(GO_RIBBON_POLE, 20.0f) || !target->HasUnitState(UNIT_STAT_CASTING))
+                {
+                    target->InterruptNonMeleeSpells(false);
+                    target->RemoveAurasDueToSpell(GetId());
+                    return;
+                }
+
+                // set xp buff duration
+                if (Aura* aur = target->GetAura(SPELL_RIBBON_DANCE))
+                {
+                    aur->SetMaxDuration(aur->GetMaxDuration() >= 3600000 ? 3600000 : aur->GetMaxDuration() + 180000);
+                    aur->RefreshDuration();
+
+                    // reward achievement criteria
+                    if (aur->GetMaxDuration() == 3600000 && target->HasAura(SPELL_HAS_FULL_MIDSUMMER_SET))
+                        target->CastSpell(target, SPELL_BURNING_HOT_POLE_DANCE, true);
+                }
+                else
+                    target->AddAura(SPELL_RIBBON_DANCE, target);
+            }
+
+            void Register()
+            {
+                OnEffectPeriodic += AuraEffectPeriodicFn(spell_gen_ribbon_pole_dancer_check_AuraScript::PeriodicTick, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_gen_ribbon_pole_dancer_check_AuraScript();
+        }
+};
+
+/*######
+## npc_torch_tossing_bunny
+######*/
+
+enum
+{
+    SPELL_TORCH_TOSSING_COMPLETE_A = 45719,
+    SPELL_TORCH_TOSSING_COMPLETE_H = 46651,
+    SPELL_TORCH_TOSSING_TRAINING   = 45716,
+    SPELL_TORCH_TOSSING_PRACTICE   = 46630,
+    SPELL_TORCH_TOSS               = 46054,
+    SPELL_TARGET_INDICATOR         = 45723,
+    SPELL_BRAZIERS_HIT             = 45724
+};
+
+class npc_torch_tossing_bunny : public CreatureScript
+{
+    public:
+        npc_torch_tossing_bunny() : CreatureScript("npc_torch_tossing_bunny") { }
+
+        struct npc_torch_tossing_bunnyAI : public ScriptedAI
+        {
+            npc_torch_tossing_bunnyAI(Creature* creature) : ScriptedAI(creature) { }
+
+            void Reset()
+            {
+                _targetTimer = urand(5000, 20000);
+            }
+
+            void SpellHit(Unit* caster, SpellInfo const* spell)
+            {
+                if (spell->Id == SPELL_TORCH_TOSS && me->HasAura(SPELL_TARGET_INDICATOR))
+                {
+                    uint8 neededHits;
+
+                    if (caster->HasAura(SPELL_TORCH_TOSSING_TRAINING))
+                        neededHits = 8;
+                    else if (caster->HasAura(SPELL_TORCH_TOSSING_PRACTICE))
+                        neededHits = 20;
+                    else
+                        return;
+
+                    DoCast(me, SPELL_BRAZIERS_HIT, true);
+                    caster->AddAura(SPELL_BRAZIERS_HIT, caster);
+
+                    if (caster->GetAuraCount(SPELL_BRAZIERS_HIT) >= neededHits)
+                    {
+                        // complete quest
+                        caster->CastSpell(caster, SPELL_TORCH_TOSSING_COMPLETE_A, true);
+                        caster->CastSpell(caster, SPELL_TORCH_TOSSING_COMPLETE_H, true);
+                        caster->RemoveAurasDueToSpell(SPELL_BRAZIERS_HIT);
+                        caster->RemoveAurasDueToSpell(neededHits == 8 ? SPELL_TORCH_TOSSING_TRAINING : SPELL_TORCH_TOSSING_PRACTICE);
+                    }
+                }
+            }
+
+            void UpdateAI(uint32 const diff)
+            {
+                if (_targetTimer <= diff)
+                {
+                    DoCast(SPELL_TARGET_INDICATOR);
+                    _targetTimer = urand(10000, 20000);
+                }
+                else
+                    _targetTimer -= diff;
+            }
+
+        private:
+            uint32 _targetTimer;
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_torch_tossing_bunnyAI(creature);
+        }
+};
+
+enum TorchCatchingData
+{
+    SPELL_FLING_TORCH_MISSILE     = 45669,
+    SPELL_TOSS_TORCH_SHADOW       = 46105,
+    SPELL_TORCH_TARGET_PICKER     = 45907,
+    SPELL_TORCHES_COUGHT          = 45693,
+    SPELL_JUGGLE_TORCH_MISSED     = 45676,
+    SPELL_TORCH_CATCHING_SUCCESS  = 46081,
+    SPELL_TORCH_DAILY_SUCCESS     = 46654,
+    NPC_JUGGLE_TARGET             = 25515,
+    QUEST_TORCH_CATCHING_A        = 11657,
+    QUEST_TORCH_CATCHING_H        = 11923,
+    QUEST_MORE_TORCH_CATCHING_A   = 11924,
+    QUEST_MORE_TORCH_CATCHING_H   = 11925
+};
+
+class spell_gen_torch_target_picker : public SpellScriptLoader
+{
+    public:
+        spell_gen_torch_target_picker() : SpellScriptLoader("spell_gen_torch_target_picker") {}
+
+        class spell_gen_torch_target_picker_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_gen_torch_target_picker_SpellScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_FLING_TORCH_MISSILE))
+                    return false;
+                if (!sSpellMgr->GetSpellInfo(SPELL_TOSS_TORCH_SHADOW))
+                    return false;
+                return true;
+            }
+
+            void FilterTargets(std::list<Unit*>& unitList)
+            {
+                Unit* caster = GetCaster();
+
+                if (!caster)
+                    return;
+
+                std::list<Creature*> juggleList;
+                caster->GetCreatureListWithEntryInGrid(juggleList, NPC_JUGGLE_TARGET, 10.0f);
+
+                if (!juggleList.empty())
+                    for (std::list<Creature*>::iterator iter = juggleList.begin(); iter != juggleList.end(); ++iter)
+                        unitList.remove(*iter);
+
+                if (unitList.empty())
+                    return;
+
+                std::list<Unit*>::iterator itr = unitList.begin();
+                std::advance(itr, urand(0, unitList.size() - 1));
+
+                Unit* target = *itr;
+                unitList.clear();
+                unitList.push_back(target);
+            }
+
+            void HandleDummy(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+                Unit* target = GetHitUnit();
+
+                if (!caster || !target)
+                    return;
+
+                caster->CastSpell(target, SPELL_FLING_TORCH_MISSILE, true);
+                caster->CastSpell(target, SPELL_TOSS_TORCH_SHADOW, true);
+            }
+
+            void Register()
+            {
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_gen_torch_target_picker_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENTRY);
+                OnEffectHitTarget += SpellEffectFn(spell_gen_torch_target_picker_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_gen_torch_target_picker_SpellScript();
+        }
+};
+
+class spell_gen_juggle_torch_catch : public SpellScriptLoader
+{
+    public:
+        spell_gen_juggle_torch_catch() : SpellScriptLoader("spell_gen_juggle_torch_catch") {}
+
+        class spell_gen_juggle_torch_catch_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_gen_juggle_torch_catch_SpellScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_TORCH_TARGET_PICKER))
+                    return false;
+                if (!sSpellMgr->GetSpellInfo(SPELL_TORCHES_COUGHT))
+                    return false;
+                if (!sSpellMgr->GetSpellInfo(SPELL_JUGGLE_TORCH_MISSED))
+                    return false;
+                return true;
+            }
+
+            void FilterTargets(std::list<Unit*>& unitList)
+            {
+                Unit* caster = GetCaster();
+                Unit* juggleTarget = NULL;
+                bool missed = true;
+
+                if (unitList.empty() || !caster || !caster->ToPlayer())
+                     return;
+
+                for (std::list<Unit*>::iterator iter = unitList.begin(); iter != unitList.end(); ++iter)
+                {
+                    if (*iter == caster)
+                        missed = false;
+
+                    if ((*iter)->ToCreature())
+                        juggleTarget = *iter;
+                }
+
+                if (missed)
+                {
+                    if (juggleTarget)
+                        juggleTarget->CastSpell(juggleTarget, SPELL_JUGGLE_TORCH_MISSED, true);
+                    caster->RemoveAurasDueToSpell(SPELL_TORCHES_COUGHT);
+                }
+                else
+                {
+                    uint8 neededCatches;
+
+                    if (caster->ToPlayer()->GetQuestStatus(QUEST_TORCH_CATCHING_A) == QUEST_STATUS_INCOMPLETE
+                        || caster->ToPlayer()->GetQuestStatus(QUEST_TORCH_CATCHING_H) == QUEST_STATUS_INCOMPLETE)
+                    {
+                        neededCatches = 4;
+                    }
+                    else if (caster->ToPlayer()->GetQuestStatus(QUEST_MORE_TORCH_CATCHING_A) == QUEST_STATUS_INCOMPLETE
+                        || caster->ToPlayer()->GetQuestStatus(QUEST_MORE_TORCH_CATCHING_H) == QUEST_STATUS_INCOMPLETE)
+                    {
+                        neededCatches = 10;
+                    }
+                    else
+                    {
+                        caster->RemoveAurasDueToSpell(SPELL_TORCHES_COUGHT);
+                        return;
+                    }
+
+                    caster->CastSpell(caster, SPELL_TORCH_TARGET_PICKER, true);
+                    caster->CastSpell(caster, SPELL_TORCHES_COUGHT, true);
+
+                    // reward quest
+                    if (caster->GetAuraCount(SPELL_TORCHES_COUGHT) >= neededCatches)
+                    {
+                        caster->CastSpell(caster, SPELL_TORCH_CATCHING_SUCCESS, true);
+                        caster->CastSpell(caster, SPELL_TORCH_DAILY_SUCCESS, true);
+                        caster->RemoveAurasDueToSpell(SPELL_TORCHES_COUGHT);
+                    }
+                }
+            }
+
+            void Register()
+            {
+                OnUnitTargetSelect += SpellUnitTargetFn(spell_gen_juggle_torch_catch_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_DEST_AREA_ENTRY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_gen_juggle_torch_catch_SpellScript();
+        }
+};
+
+/*###########
+# boss_ahune
+############*/
+
+enum SlavePensMidsummerData
+{
+    SPELL_ICE_SPIKE_TRIGG = 50097,
+    SPELL_AHUNE_SHIELD = 45954,
+    SPELL_AHUNE_LOOT = 45939,
+    SPELL_ICE_AURA_VISUAL = 45945,
+    SPELL_REMERGE = 46402,
+    SPELL_GHOST = 46786,
+
+    // unused
+    SPELL_SUMMON_AHUNE = 45926,
+    SPELL_AHUNE_ACHIEV = 62043,
+    SPELL_CRYSTAL_SPIKE = 47944,
+    SPELL_CRYSTAL_SPIKE_H = 57067,
+    SPELL_SUMMON_SPIKE = 47955,
+
+    // hailstone
+    SPELL_CHILLING_AURA = 46542,
+    SPELL_HAILSTONE_CHILL = 46458,
+    SPELL_PULVERIZE = 2676,
+
+    // coldwave
+    SPELL_BITTER_BLAST = 46406,
+
+    // frostwind
+    SPELL_LIGHTNING_SHIELD = 12550,
+    SPELL_WIND_BUFFET = 46568,
+
+    // skarthis
+    SPELL_CRASHING_WAVE = 55909,
+    SPELL_FROST_NOVA = 11831,
+    SPELL_FROSTBOLT_S = 15043,
+
+    // Creatures
+    NPC_AHUNE = 25740,
+    NPC_FROZEN_CORE = 25865,
+    NPC_GHOST_OF_AHUNE = 26239,
+    NPC_SKARTHIS_SUMMONER = 40446,
+    NPC_AHUNITE_HAILSTONE = 25755,
+    NPC_AHUNITE_COLDWAVE  = 25756,
+    NPC_AHUNITE_FROSTWIND = 25757
+};
+
+class boss_ahune : public CreatureScript
+{
+public:
+    boss_ahune() : CreatureScript("boss_ahune") { }
+
+    struct boss_ahuneAI : public Scripted_NoMovementAI
+    {
+        boss_ahuneAI(Creature* creature) : Scripted_NoMovementAI(creature)
+        {
+            Reset();
+        }
+
+        uint32 uiPhase;
+        uint32 uiPhaseChangeTimer;
+        uint32 uiSpikeTimer;
+        uint32 uiAddsTimer;
+        bool IsFirstPhase;
+        uint8 uiWaveCount;
+
+        uint64 uiCoreGUID;
+        uint32 uiCoreHp;
+
+        uint32 uiDieTimer;
+        bool MustDie;
+
+        void Reset()
+        {
+            uiPhase = 0;
+            uiPhaseChangeTimer = 90000;
+            uiSpikeTimer = 7000;
+            uiAddsTimer = 10000;
+            IsFirstPhase = true;
+            uiWaveCount = 1;
+            uiCoreGUID = 0;
+            uiCoreHp = 0;
+            uiDieTimer = 1000;
+            MustDie = false;
+            DoCast(me, SPELL_AHUNE_SHIELD);
+        }
+
+        void EnterCombat(Unit* who)
+        {
+            me->SetInCombatWithZone();
+            DoCast(me, SPELL_ICE_AURA_VISUAL);
+            uiPhase = 1;
+        }
+
+        void JustReachedHome()
+        {
+            me->ForcedDespawn();
+            if(Creature* temp = me->GetMap()->GetCreature(uiCoreGUID))
+                temp->ForcedDespawn();
+        };
+
+        void JustDied(Unit* /*killer*/)
+        {
+            DoCast(me, SPELL_AHUNE_ACHIEV);
+        }
+
+        void JustSummoned(Creature* summon)
+        {
+            summon->SetInCombatWithZone();
+        }
+
+        void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+        {
+            if(me->GetHealth() < uiDamage)
+            {
+                uiDamage = 0;
+                DoSummonLoot();
+            }
+        }
+
+        void DoSummonLoot()
+        {
+            DoCast(me, SPELL_AHUNE_LOOT);
+            uiDieTimer = 100;
+            MustDie = true;
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+
+            //Return since we have no target
+            if (!UpdateVictim())
+                return;
+
+            if(uiSpikeTimer < uiDiff)
+            {
+                if (Unit *target = SelectTarget(SELECT_TARGET_RANDOM, 0, 10000, true))
+                    DoCast(target, SPELL_ICE_SPIKE_TRIGG);
+                    uiSpikeTimer = urand(10000, 15000);
+            }
+            else uiSpikeTimer -= uiDiff;
+
+            if(uiDieTimer <= uiDiff && MustDie)
+                me->DealDamage(me, me->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            else uiDieTimer -= uiDiff;
+
+            if(uiPhase == 1)
+            {
+                if(!me->HasAura(SPELL_AHUNE_SHIELD))
+                    DoCast(me, SPELL_AHUNE_SHIELD);
+
+                if(uiAddsTimer < uiDiff)
+                {
+                    for(uint8 i = 0; i < uiWaveCount; i++)
+                    {
+                        float angle = (float) rand()*360/RAND_MAX + 1;
+                        float homeX = me->GetPositionX() + 10*cos(angle*(M_PI/180));
+                        float homeY = me->GetPositionY() + 10*sin(angle*(M_PI/180));
+                        for(uint8 j = 0; j < 2; j++)
+                            me->SummonCreature(NPC_AHUNITE_COLDWAVE, homeX + urand(0, 2), homeY + urand(0, 2), me->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+                    }
+                    if(!IsFirstPhase)
+                    {
+                        for(uint8 i = 0; i < uiWaveCount - 1; i++)
+                            me->SummonCreature(NPC_AHUNITE_FROSTWIND, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+                    }
+                    uiAddsTimer = urand(5000, 7000);
+                }
+                else uiAddsTimer -= uiDiff;
+
+                if(uiPhaseChangeTimer < uiDiff)
+                {
+                    if(IsFirstPhase)
+                    {
+                        if(Creature* temp = me->SummonCreature(NPC_FROZEN_CORE, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                        {
+                            uiCoreGUID = temp->GetGUID();
+                            temp->setFaction(14);
+                        }
+                    }
+                    else
+                    {
+                        if(Creature* core = me->GetMap()->GetCreature(uiCoreGUID))
+                        {
+                            core->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            core->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            core->SetVisible(true);
+                        }
+                    }
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->RemoveAurasDueToSpell(SPELL_AHUNE_SHIELD);
+                    DoCast(me, SPELL_GHOST);
+                    uiPhase = 2;
+                    uiWaveCount += 1;
+                    uiPhaseChangeTimer = 40000;
+                }
+                else uiPhaseChangeTimer -= uiDiff;
+
+                DoMeleeAttackIfReady();
+            }
+            else if(uiPhase == 2)
+            {
+                if(uiPhaseChangeTimer < uiDiff)
+                {
+                    if(Creature* core = me->GetMap()->GetCreature(uiCoreGUID))
+                    {
+                        core->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        core->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        core->SetVisible(false);
+                    }
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SummonCreature(NPC_AHUNITE_HAILSTONE, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+                    me->RemoveAurasDueToSpell(SPELL_GHOST);
+                    DoCast(me, SPELL_REMERGE);
+                    IsFirstPhase = false;
+                    uiPhase = 1;
+                    uiPhaseChangeTimer = 90000;
+                }
+                else uiPhaseChangeTimer -= uiDiff;
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new  boss_ahuneAI(creature);
+    }
+
+};
+class mob_frozen_core : public CreatureScript
+{
+public:
+    mob_frozen_core() : CreatureScript("mob_frozen_core") { }
+
+    struct mob_frozen_coreAI : public ScriptedAI
+    {
+        mob_frozen_coreAI (Creature* creature) : ScriptedAI(creature)
+        {
+            Reset();
+        }
+
+        void Reset()
+        {
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new  mob_frozen_coreAI(creature);
+    }
+};
+
+/*#############
+# ahune's adds
+##############*/
+
+class mob_ahunite_hailstone : public CreatureScript
+{
+public:
+    mob_ahunite_hailstone() : CreatureScript("mob_ahunite_hailstone") { }
+
+    struct mob_ahunite_hailstoneAI  : public ScriptedAI
+    {
+        mob_ahunite_hailstoneAI (Creature* creature) : ScriptedAI(creature)
+        {
+            Reset();
+        }
+
+        uint32 uiChillTimer;
+        uint32 uiPulverizeTimer;
+
+        void Reset()
+        {
+            DoCast(me, SPELL_CHILLING_AURA);
+            uiPulverizeTimer = 7000;
+            uiChillTimer = 5000;
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            //Return since we have no target
+            if (!UpdateVictim())
+                return;
+
+            if(uiChillTimer < uiDiff)
+            {
+                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM,0))
+                    DoCast(target, SPELL_HAILSTONE_CHILL);
+                uiChillTimer = 5000;
+            }
+            else uiChillTimer -= uiDiff;
+
+            if(uiPulverizeTimer < uiDiff)
+            {
+                DoCast(me->getVictim(), SPELL_PULVERIZE);
+                uiPulverizeTimer = 10000;
+            }
+            else uiPulverizeTimer -= uiDiff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new  mob_ahunite_hailstoneAI(creature);
+    }
+};
+
+class mob_ahunite_coldwave : public CreatureScript
+{
+public:
+    mob_ahunite_coldwave() : CreatureScript("mob_ahunite_coldwave") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new  mob_ahunite_coldwaveAI(creature);
+    }
+
+    struct mob_ahunite_coldwaveAI : public ScriptedAI
+    {
+        mob_ahunite_coldwaveAI (Creature* creature) : ScriptedAI(creature)
+        {
+            Reset();
+        }
+
+        uint32 uiBlastTimer;
+
+        void Reset()
+        {
+            uiBlastTimer = 5000;
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+            //Return since we have no target
+            if (!UpdateVictim())
+                return;
+
+            if(uiBlastTimer < uiDiff)
+            {
+                DoCast(me->getVictim(), SPELL_BITTER_BLAST);
+                uiBlastTimer = urand(4000, 7000);
+            }
+            else uiBlastTimer -= uiDiff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+};
+
+class mob_ahunite_frostwind : public CreatureScript
+{
+public:
+    mob_ahunite_frostwind() : CreatureScript("mob_ahunite_frostwind") { }
+
+    struct mob_ahunite_frostwindAI : public ScriptedAI
+    {
+        mob_ahunite_frostwindAI (Creature* creature) : ScriptedAI(creature)
+        {
+            Reset();
+        }
+
+        uint32 uiBuffedTimer;
+
+        void Reset()
+        {
+            DoCast(me, SPELL_LIGHTNING_SHIELD);
+            uiBuffedTimer = 6000;
+        }
+
+        void UpdateAI(const uint32 uiDiff)
+        {
+
+            if(uiBuffedTimer < uiDiff)
+            {
+                DoCast(me->getVictim(), SPELL_WIND_BUFFET);
+                uiBuffedTimer = 6000;
+            }
+            else uiBuffedTimer -= uiDiff;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new  mob_ahunite_frostwindAI(creature);
+    }
+};
+
+/*######################
+# go_ice_stone_midsummer
+########################*/
+#define GOSSIP_SENDER_CHECK 547
+class go_ice_stone_midsummer : public GameObjectScript
+{
+public:
+    go_ice_stone_midsummer() : GameObjectScript("go_ice_stone_midsummer") { }
+
+    bool OnGossipHello(Player* player, GameObject* go)
+    {
+        switch (go->GetGUIDLow())
+        {
+            case 801054:
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"Volver a la entrada del Recinto de los Esclavos",GOSSIP_SENDER_CHECK,GOSSIP_ACTION_INFO_DEF+1);
+                                break;
+            case 801055:
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT,"Ir a la zona de Ahune",GOSSIP_SENDER_CHECK,GOSSIP_ACTION_INFO_DEF+2);
+                break;
+         }
+        player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE,go->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, GameObject* /*go*/, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        switch (uiAction)
+        {
+            case GOSSIP_ACTION_INFO_DEF+1:
+                player->TeleportTo(547,127.881317f,-123.708618f,-1.590554f,4.317789f);
+                break;
+            case GOSSIP_ACTION_INFO_DEF+2:
+                player->TeleportTo(547,-102.074738f,-128.866577f,-1.633126f,4.723298f);
+                break;
+        }
+        player->CLOSE_GOSSIP_MENU();
+        return true;
+    }
+};
+
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1950,4 +2709,14 @@ void AddSC_custom_fixes()
     new npc_antelarion_gossip();
     new npc_woodlands_walker();
     new go_lab_work_reagents();
+    new spell_gen_ribbon_pole_dancer_check();
+    new npc_torch_tossing_bunny();
+    new spell_gen_torch_target_picker();
+    new spell_gen_juggle_torch_catch();
+    new boss_ahune();
+    new mob_frozen_core();
+    new mob_ahunite_hailstone();
+    new mob_ahunite_coldwave();
+    new mob_ahunite_frostwind();
+    new go_ice_stone_midsummer();
 }
