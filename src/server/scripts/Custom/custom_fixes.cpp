@@ -3119,6 +3119,63 @@ public:
     }
 };
 
+/*##########################
+# spell_construct_barricade
+###########################*/
+
+enum BarricadeData
+{
+    SPELL_CONSTRUCT_BARRICADE = 59925,
+    SPELL_SUMMON_BARRICADE_A = 59922,
+    SPELL_SUMMON_BARRICADE_B = 59923,
+    SPELL_SUMMON_BARRICADE_C = 59924,
+    NPC_EBON_BLADE_MARKER = 31887
+};
+
+class spell_construct_barricade : public SpellScriptLoader
+{
+public:
+    spell_construct_barricade() : SpellScriptLoader("spell_construct_barricade") {}
+
+    class spell_construct_barricade_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_construct_barricade_SpellScript)
+
+        bool Validate(SpellInfo const * /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_CONSTRUCT_BARRICADE))
+                return false;
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex /*effIndex*/)
+        {
+            if (Unit* caster = GetCaster())
+                if (Player* player = caster->ToPlayer())
+                {
+                    uint32 SummonBarricadeSpell = 0;
+                    switch (urand(1,3))
+                    {
+                        case 1: SummonBarricadeSpell = SPELL_SUMMON_BARRICADE_A; break;
+                        case 2: SummonBarricadeSpell = SPELL_SUMMON_BARRICADE_B; break;
+                        case 3: SummonBarricadeSpell = SPELL_SUMMON_BARRICADE_C; break;
+                    }
+                    player->CastSpell(player, SummonBarricadeSpell, true);
+                    player->KilledMonsterCredit(NPC_EBON_BLADE_MARKER, 0);
+                }
+        }
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_construct_barricade_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_construct_barricade_SpellScript();
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3168,4 +3225,5 @@ void AddSC_custom_fixes()
     new spell_song_of_cleansing();
     new spell_contact_brann();
     new npc_moodle();
+    new spell_construct_barricade();
 }
