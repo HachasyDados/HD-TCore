@@ -32,7 +32,11 @@ Script Data End */
 enum Spells
 {
     SPELL_TRESPASSER_A = 54028,
-    SPELL_TRESPASSER_H = 54029
+    SPELL_TRESPASSER_H = 54029,
+    SPELL_DISGUISE_A_F = 70973,
+    SPELL_DISGUISE_A_M = 70974,
+    SPELL_DISGUISE_H_F = 70971,
+    SPELL_DISGUISE_H_M = 70972
 };
 
 enum NPCs // All outdoor guards are within 35.0f of these NPCs
@@ -78,7 +82,7 @@ public:
             switch (me->GetEntry())
             {
                 case 29254:
-                    if (player->GetTeam() == HORDE)              // Horde unit found in Alliance area
+                    if (player->GetTeam() == HORDE && !(player->HasAura(SPELL_DISGUISE_H_M) || player->HasAura(SPELL_DISGUISE_H_F)))      // Horde unit found in Alliance area
                     {
                         if (GetClosestCreatureWithEntry(me, NPC_APPLEBOUGH_A, 32.0f))
                         {
@@ -90,7 +94,7 @@ public:
                     }
                     break;
                 case 29255:
-                    if (player->GetTeam() == ALLIANCE)           // Alliance unit found in Horde area
+                    if (player->GetTeam() == ALLIANCE && !(player->HasAura(SPELL_DISGUISE_A_M) || player->HasAura(SPELL_DISGUISE_A_F)))  // Alliance unit found in Horde area
                     {
                         if (GetClosestCreatureWithEntry(me, NPC_SWEETBERRY_H, 32.0f))
                         {
