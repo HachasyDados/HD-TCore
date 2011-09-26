@@ -1831,6 +1831,10 @@ void LFGMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
         player->RewardQuest(qReward, 0, NULL, false);
     }
 
+    // If the dungeon was Oculus(Heroic) we also reward the extra bag
+    if (player && player->GetMapId() == 578 && dungeon->difficulty == DUNGEON_DIFFICULTY_HEROIC)
+        player->AddItem(52676, 1);
+
     // Give rewards
     sLog->outDebug(LOG_FILTER_LFG, "LFGMgr::RewardDungeonDoneFor: [" UI64FMTD "] done dungeon %u, %s previously done.", player->GetGUID(), GetDungeon(gguid), index > 0 ? " " : " not");
     player->GetSession()->SendLfgPlayerReward(dungeon->Entry(), GetDungeon(gguid, false), index, reward, qReward);

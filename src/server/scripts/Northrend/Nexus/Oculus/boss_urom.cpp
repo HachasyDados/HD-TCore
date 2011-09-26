@@ -46,7 +46,13 @@ enum Yells
     SAY_AGGRO_2                                   = -1578001,
     SAY_AGGRO_3                                   = -1578002,
     SAY_AGGRO_4                                   = -1578003,
-    SAY_TELEPORT                                  = -1578004,
+    SAY_TELEPORT_1                                = -1578004,
+    SAY_TELEPORT_2                                = -1578037,
+    SAY_KILL_1                                    = -1578019,
+    SAY_KILL_2                                    = -1578020,
+    SAY_KILL_3                                    = -1578021,
+    SAY_EREGOS_SPAWN                              = -1578022,
+    SAY_DEATH                                     = -1578018,
 };
 
 enum eCreature
@@ -228,10 +234,13 @@ public:
             if (!instance || instance->GetData(DATA_UROM_PLATAFORM) < 2)
                 return;
 
+            if (me->HasUnitState(UNIT_STAT_CASTING))
+                return;
+
             if (teleportTimer <= uiDiff)
             {
                 me->InterruptNonMeleeSpells(false);
-                DoScriptText(SAY_TELEPORT, me);
+                DoScriptText(RAND(SAY_TELEPORT_1, SAY_TELEPORT_2), me);
                 me->GetMotionMaster()->MoveIdle();
                 DoCast(SPELL_TELEPORT);
                 teleportTimer = urand(30000, 35000);
@@ -272,6 +281,7 @@ public:
                 {
                     DoCastVictim(SPELL_FROSTBOMB);
                     frostBombTimer = urand(5000, 8000);
+                    return;
                 } else frostBombTimer -= uiDiff;
 
                 if (timeBombTimer <= uiDiff)
@@ -280,6 +290,7 @@ public:
                         DoCast(unit, SPELL_TIME_BOMB);
 
                     timeBombTimer = urand(20000, 25000);
+                    return;
                 } else timeBombTimer -= uiDiff;
             }
 
@@ -289,6 +300,10 @@ public:
         void JustDied(Unit* /*killer*/)
         {
             _JustDied();
+
+            DoScriptText(SAY_DEATH, me);
+            if(Creature* eregos = me->GetCreature(*me, instance->GetData64(DATA_EREGOS)))
+                DoScriptText(SAY_EREGOS_SPAWN, eregos);
         }
 
         void LeaveCombat()
@@ -322,6 +337,12 @@ public:
                     break;
             }
         }
+
+        void KilledUnit(Unit* /*victim*/)
+        {
+            DoScriptText(RAND(SAY_KILL_1, SAY_KILL_2, SAY_KILL_3), me);
+        }
+
         private:
             float x, y;
 
