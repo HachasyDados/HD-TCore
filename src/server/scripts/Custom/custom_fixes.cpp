@@ -1409,6 +1409,66 @@ public:
     }
 };
 
+/*###################
+# spell_fumping_39246
+####################*/
+
+enum AnotherFumpingSpellData
+{
+    SPELL_FUMPING2 = 39246,
+    NPC_HAISHULUD = 22038
+};
+
+class spell_fumping_39246 : public SpellScriptLoader
+{
+public:
+    spell_fumping_39246() : SpellScriptLoader("spell_fumping_39246") {}
+
+    class spell_fumping_39246SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_fumping_39246SpellScript)
+
+        bool Validate(SpellInfo const * /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_FUMPING2))
+                return false;
+            return true;
+        }
+
+        void HandleDummy(SpellEffIndex /*effIndex*/)
+        {
+            if (Unit* player = GetCaster())
+            {
+                switch (urand(1,3))
+                {
+                    case 1:
+                        player->SummonCreature(NPC_MATURE_BONE_SIFTER, player->GetPositionX()+rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        player->SummonCreature(NPC_MATURE_BONE_SIFTER, player->GetPositionX()+rand()%10, player->GetPositionY()-rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        player->SummonCreature(NPC_MATURE_BONE_SIFTER, player->GetPositionX()-rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        break;
+                    case 2:
+                        player->SummonCreature(NPC_SAND_GNOME, player->GetPositionX()+rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        player->SummonCreature(NPC_SAND_GNOME, player->GetPositionX()+rand()%10, player->GetPositionY()-rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        player->SummonCreature(NPC_SAND_GNOME, player->GetPositionX()-rand()%10, player->GetPositionY()+rand()%10, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000);
+                        break;
+                    case 3:
+                        player->SummonCreature(NPC_HAISHULUD, player->GetPositionX()+rand()%5, player->GetPositionY()+rand()%5, player->GetPositionZ()+5, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 600000);
+                        break;
+                }
+            }
+        }
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_fumping_39246SpellScript::HandleDummy, EFFECT_ALL, SPELL_EFFECT_ANY);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_fumping_39246SpellScript();
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1432,4 +1492,5 @@ void AddSC_custom_fixes()
     new go_iron_rune_construct_workbank();
     new npc_terokk();
     new spell_fumping_39238();
+    new spell_fumping_39246();
 }
