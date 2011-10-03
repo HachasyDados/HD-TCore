@@ -1877,6 +1877,49 @@ public:
     }
 };
 
+/*######
+## Quest 12557: Lab Work
+######*/
+
+enum LabWorkReagents
+{
+    QUEST_LAB_WORK                          = 12557,
+    SPELL_WIRHERED_BATWING_KILL_CREDIT      = 51226,
+    SPELL_MUDDY_MIRE_MAGGOT_KILL_CREDIT     = 51227,
+    SPELL_AMBERSEED_KILL_CREDIT             = 51228,
+    SPELL_CHILLED_SERPENT_MUCUS_KILL_CREDIT = 51229,
+    GO_AMBERSEED                            = 190459,
+    GO_CHILLED_SERPENT_MUCUS                = 190462,
+    GO_WITHERED_BATWING                     = 190473,
+    GO_MUDDY_MIRE_MAGGOTS                   = 190478
+};
+
+class go_lab_work_reagents : public GameObjectScript
+{
+public:
+
+    go_lab_work_reagents() : GameObjectScript("go_lab_work_reagents") { }
+
+    bool OnGossipHello(Player* player, GameObject* go)
+    {
+        if (player->GetQuestStatus(QUEST_LAB_WORK) == QUEST_STATUS_INCOMPLETE)
+        {
+            uint32 CreditSpell = 0;
+            switch (go->GetEntry())
+            {
+                case GO_AMBERSEED:              CreditSpell = SPELL_AMBERSEED_KILL_CREDIT; break;
+                case GO_CHILLED_SERPENT_MUCUS:  CreditSpell = SPELL_CHILLED_SERPENT_MUCUS_KILL_CREDIT; break;
+                case GO_WITHERED_BATWING:       CreditSpell = SPELL_WIRHERED_BATWING_KILL_CREDIT; break;
+                case GO_MUDDY_MIRE_MAGGOTS:     CreditSpell = SPELL_MUDDY_MIRE_MAGGOT_KILL_CREDIT; break;
+            }
+
+            if (CreditSpell)
+                player->CastSpell(player, CreditSpell, true);
+        }
+        return false;
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1906,4 +1949,5 @@ void AddSC_custom_fixes()
     new npc_evergrove_druid();
     new npc_antelarion_gossip();
     new npc_woodlands_walker();
+    new go_lab_work_reagents();
 }
