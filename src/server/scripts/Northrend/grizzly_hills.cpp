@@ -29,6 +29,7 @@ EndContentData */
 
 #include "ScriptPCH.h"
 #include "ScriptedEscortAI.h"
+#include "ScriptedFollowerAI.h"
 
 #define GOSSIP_ITEM1 "You're free to go Orsonn, but first tell me what's wrong with the furbolg."
 #define GOSSIP_ITEM2 "What happened then?"
@@ -89,7 +90,7 @@ public:
             }
         }
 
-        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+        player->SEND_GOSSIP_MENU(creature->GetGossipTextId(), creature->GetGUID());
         return true;
     }
 
@@ -799,6 +800,218 @@ public:
     };
 };
 
+/*######
+## Quest 13666 & 13673:  Une lame digne d'un champion!
+######*/
+
+enum eLakeFrog
+{
+  SPELL_WARTSBGONE_LIP_BALM = 62574,
+     SPELL_FROG_LOVE = 62537,
+       SPELL_WARTS = 62581,
+   NPC_MAIDEN_OF_ASHWOOD_LAKE = 33220,
+    MAIDEN_SPAWN
+};
+
+//Script de la grenouille
+class npc_lake_frog : public CreatureScript
+{
+public:
+       npc_lake_frog(): CreatureScript("npc_lake_frog"){}
+
+    struct npc_lake_frogAI : public FollowerAI // FollowerAI:Permet au npc de suivre une cible
+     {
+              npc_lake_frogAI(Creature *c) : FollowerAI(c) {}
+
+               uint32 uiFollowTimer; //Temps de poursuite (15 sec)
+            bool following;	//Si la grenouille est en train de suivre le joueur
+
+           void Reset ()
+          {
+                      following=false;
+                       uiFollowTimer=15000; // 15 sec
+         }
+
+             void UpdateAI(const uint32 diff)
+               {
+                      if(following)
+                  {
+                              if(uiFollowTimer <= diff)
+                              {
+                                      SetFollowComplete();
+                                   me->DisappearAndDie();		//dépop
+                                        me->Respawn(true);
+                                     Reset();
+                               }
+                              else uiFollowTimer-=diff;
+                      }
+              }
+
+             void ReceiveEmote(Player* player, uint32 emote)
+                {
+                      if(following) //Si la grenouille a déja recu un /bisou il ne se passe rien
+                             return;
+
+                       if(emote==TEXT_EMOTE_KISS) // Si on fait /bisou
+                        {
+                              if(!player->HasAura(SPELL_WARTSBGONE_LIP_BALM))
+                                        player->AddAura(SPELL_WARTS,player);
+                           else if(roll_chance_i(10)) // 10% de chance de trouver la grenouille
+                           {
+                                      player->SummonCreature(NPC_MAIDEN_OF_ASHWOOD_LAKE,me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,30000);
+                                  me->DisappearAndDie();		//dépop
+                                        me->Respawn(true); //Repop 15 secondes plus tard
+                               }
+                              else
+                           {
+                                      player->RemoveAura(SPELL_WARTSBGONE_LIP_BALM);	//On enleve le buff mis par l'objet de quete
+                                    me->AddAura(SPELL_FROG_LOVE,me); //On ajoute l'aura a la grenouille (les coeurs)
+                                       StartFollow(player, 35, NULL); //La grenouille suis le joueur
+                                  following=true;
+                                }
+                      }
+              }
+
+     };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+              return new npc_lake_frogAI(creature);
+  }
+};
+
+//Script de la princesse
+#define MAIDEN_DEFAULT_TEXTID 14319
+#define MAIDEN_REWARD_TEXTID 14320
+//#define GOSSIP_HELLO_MAIDEN "Delighted to have helped, ma'am. Were you once the guardian of a Send legendary. Would you know From where I could find it?"
+#define GOSSIP_HELLO_MAIDEN "Encantado de haber ayudado, señora. Parece que una vez fuiste la guardiana de una legendaria espada. ¿Sabe donde puedo encontrarla?"
+#define SPELL_SUMMON_ASHWOOD_BRAND 62554
+
+class npc_maiden_of_ashwood_lake : public CreatureScript
+{
+public:
+       npc_maiden_of_ashwood_lake(): CreatureScript("npc_maiden_of_ashwood_lake"){}
+
+  bool OnGossipHello(Player* player, Creature* creature)
+ {
+              if(!player->HasItemCount(44981,1,true))
+                {
+                      player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HELLO_MAIDEN, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                  player->SEND_GOSSIP_MENU(MAIDEN_DEFAULT_TEXTID, creature->GetGUID());
+                  creature->ForcedDespawn(10000);
+                        return true;
+           }
+
+             player->SEND_GOSSIP_MENU(MAIDEN_DEFAULT_TEXTID, creature->GetGUID());
+          return true;
+   }
+
+     bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+  {
+              switch(uiAction)
+               {
+                      case GOSSIP_ACTION_INFO_DEF+1:
+                         player->CastSpell(player,SPELL_SUMMON_ASHWOOD_BRAND,true);
+                             player->SEND_GOSSIP_MENU(MAIDEN_REWARD_TEXTID, creature->GetGUID());
+                           break;
+         }
+              return true;
+   }
+};
+
+//Quete : Une arme remarquable
+//Quand on utilise l'item:
+//Pop du gameobject 194239 <<NENUFAR
+//Pop du npc 33723
+
+//pop de gob 194238
+#define NPC_TEXTID_MAIDEN_OF_DRAK_MAR_01 -1850000
+#define NPC_TEXTID_MAIDEN_OF_DRAK_MAR_02 -1850001
+#define NPC_TEXTID_MAIDEN_OF_DRAK_MAR_03 -1850002
+#define NPC_TEXTID_MAIDEN_OF_DRAK_MAR_04 -1850003
+#define MAIDEN_OF_DRAK_MAR_TIMER_00 2000
+#define MAIDEN_OF_DRAK_MAR_TIMER_01 5000
+#define MAIDEN_OF_DRAK_MAR_TIMER_02 6000
+#define MAIDEN_OF_DRAK_MAR_TIMER_03 7000
+#define MAIDEN_OF_DRAK_MAR_TIMER_04 20000
+#define MAIDEN_OF_DRAK_MAR_GOB_01 194239
+#define MAIDEN_OF_DRAK_MAR_GOB_02 194238
+//Summon la dame :X: 4602.977 Y: -1600.141 Z: 156.7834 O: 0.7504916
+
+class npc_maiden_of_drak_mar : public CreatureScript
+{
+public:
+       npc_maiden_of_drak_mar(): CreatureScript("npc_maiden_of_drak_mar"){}
+
+  struct npc_maiden_of_drak_marAI : public ScriptedAI
+    {
+              uint32 phase;
+          uint32 uiPhaseTimer;
+           uint64 firstGobGuid;
+           uint64 secondGobGuid;
+
+         npc_maiden_of_drak_marAI(Creature *c) : ScriptedAI(c)
+          {
+                      phase = 0;
+                     uiPhaseTimer = MAIDEN_OF_DRAK_MAR_TIMER_00;
+                    if(GameObject* go = me->SummonGameObject(MAIDEN_OF_DRAK_MAR_GOB_01,4602.977f,-1600.141f,156.7834f,0.7504916f,0,0,0,0,0))
+                               firstGobGuid = go->GetGUID(); //Pop du nénuphar
+                }
+
+             void UpdateAI(const uint32 diff)
+               {
+                      if(uiPhaseTimer <= diff)
+                       {
+                              phase++;
+                                       switch(phase)
+                                  {
+                                              case 1:
+                                                        DoScriptText(NPC_TEXTID_MAIDEN_OF_DRAK_MAR_01, me);
+                                                    uiPhaseTimer = MAIDEN_OF_DRAK_MAR_TIMER_01;
+                                                    break;
+                                         case 2:
+                                                        DoScriptText(NPC_TEXTID_MAIDEN_OF_DRAK_MAR_02, me);
+                                                    uiPhaseTimer = MAIDEN_OF_DRAK_MAR_TIMER_02;
+                                                    break;
+                                         case 3:
+                                                        DoScriptText(NPC_TEXTID_MAIDEN_OF_DRAK_MAR_03, me);
+                                                    uiPhaseTimer = MAIDEN_OF_DRAK_MAR_TIMER_03;
+                                                    break;
+                                         case 4:
+                                                        DoScriptText(NPC_TEXTID_MAIDEN_OF_DRAK_MAR_04, me);
+                                                    if(GameObject* go = me->SummonGameObject(MAIDEN_OF_DRAK_MAR_GOB_02,4603.351f,-1599.288f,156.8822f,2.234018f,0,0,0,0,0))
+                                                                secondGobGuid = go->GetGUID(); //Pop de la lame
+                                                        uiPhaseTimer = MAIDEN_OF_DRAK_MAR_TIMER_04;
+                                                    break;
+                                         case 5:
+                                                        if(GameObject* go = GameObject::GetGameObject(*me,firstGobGuid))
+                                                               go->RemoveFromWorld();// Dépop du nénuphar
+                                                     if(GameObject* go = GameObject::GetGameObject(*me,secondGobGuid))
+                                                              go->RemoveFromWorld();// Dépop de la lame
+                                                      me->ForcedDespawn();// disparition du pnj
+                                                      break;
+                                         default:// Ne devrait jamais arriver
+                                                   if(GameObject* go = GameObject::GetGameObject(*me,firstGobGuid))
+                                                               go->RemoveFromWorld();// Dépop du nénuphar
+                                                     if(GameObject* go = GameObject::GetGameObject(*me,secondGobGuid))
+                                                              go->RemoveFromWorld();// Dépop de la lame
+                                                      me->ForcedDespawn();// disparition du pnj
+                                                      break;
+                                 }
+                      }
+                      else
+                   {
+                              uiPhaseTimer -= diff;
+                  }
+              }
+      };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+              return new npc_maiden_of_drak_marAI(creature);
+ }
+};
+
 void AddSC_grizzly_hills()
 {
     new npc_orsonn_and_kodian;
@@ -808,6 +1021,9 @@ void AddSC_grizzly_hills()
     new npc_tallhorn_stag;
     new npc_amberpine_woodsman;
     new npc_wounded_skirmisher;
+    new npc_lake_frog;
+    new npc_maiden_of_ashwood_lake;
+    new npc_maiden_of_drak_mar;
     new npc_lightning_sentry();
     new npc_venture_co_straggler();
 }
