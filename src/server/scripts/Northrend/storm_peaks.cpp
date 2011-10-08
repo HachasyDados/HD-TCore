@@ -812,6 +812,133 @@ class npc_hyldsmeet_protodrake : public CreatureScript
         }
 };
 
+/*######
+## Quest: The Last of Her Kind (12983)
+######*/
+
+enum eIcemawMatriarch
+{
+    QUEST_LAST_OF_HER_KIND         = 12983,
+    ENTRY_INJURED_ICEMAW           = 29563,
+    SPELL_HARNESSED_ICEMAW         = 56795
+};
+
+const Position HarnessedIcemawWaypoints[17] =
+{
+    {7332.80f, -2065.69f, 765.29f, 0.0f},
+    {7327.32f, -2101.70f, 774.22f, 0.0f},
+    {7254.51f, -2117.08f, 778.98f, 0.0f},
+    {7224.31f, -2117.58f, 777.44f, 0.0f},
+    {7194.28f, -2114.08f, 765.97f, 0.0f},
+    {7155.83f, -2134.19f, 762.16f, 0.0f},
+    {7117.62f, -2113.06f, 760.57f, 0.0f},
+    {7074.25f, -1956.43f, 769.82f, 0.0f},
+    {7065.34f, -1917.58f, 781.57f, 0.0f},
+    {7094.17f, -1884.47f, 787.00f, 0.0f},
+    {7033.13f, -1883.46f, 799.88f, 0.0f},
+    {7021.64f, -1844.55f, 818.59f, 0.0f},
+    {7015.42f, -1745.49f, 819.72f, 0.0f},
+    {7003.12f, -1721.36f, 820.06f, 0.0f},
+    {6947.09f, -1724.14f, 820.61f, 0.0f},
+    {6877.17f, -1684.31f, 820.03f, 0.0f},
+    {6825.53f, -1702.27f, 820.55f, 0.0f}
+};
+
+class npc_injured_icemaw : public CreatureScript
+{
+public:
+    npc_injured_icemaw() : CreatureScript("npc_injured_icemaw") { }
+
+    struct npc_injured_icemawAI : public ScriptedAI
+    {
+        npc_injured_icemawAI(Creature* creature) : ScriptedAI(creature) { }
+
+        void MoveInLineOfSight(Unit* who)
+        {
+            if (who->GetTypeId() != TYPEID_PLAYER)
+                return;
+
+            if (who->ToPlayer()->GetQuestStatus(QUEST_LAST_OF_HER_KIND) == QUEST_STATUS_INCOMPLETE && !who->HasUnitState(UNIT_STAT_ONVEHICLE) && who->GetDistance(me) < 5.0f)
+            {
+                who->CastSpell(who, SPELL_HARNESSED_ICEMAW, true);
+                // disable player control
+                if (Unit* base = who->GetVehicleBase())
+                    if (base->isCharmed())
+                        base->RemoveCharmedBy(base->GetCharmer());
+            }
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_injured_icemawAI(creature);
+    }
+};
+
+class npc_harnessed_icemaw : public CreatureScript
+{
+public:
+    npc_harnessed_icemaw() : CreatureScript("npc_harnessed_icemaw") { }
+
+    struct npc_harnessed_icemawAI : public ScriptedAI
+    {
+        npc_harnessed_icemawAI(Creature* creature) : ScriptedAI(creature) { }
+
+        uint8 count;
+        bool wp_reached;
+        bool movementStarted;
+
+        void Reset()
+        {
+            count = 0;
+            wp_reached = false;
+            movementStarted = false;
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if (type != POINT_MOTION_TYPE || id != count)
+                return;
+
+            if (id < 16)
+            {
+                ++count;
+                wp_reached = true;
+            }
+            else // reached questgiver, give credit
+            {
+                Unit* player = me->GetVehicleKit()->GetPassenger(0);
+                if (player && player->GetTypeId() == TYPEID_PLAYER)
+                {
+                    player->ToPlayer()->KilledMonsterCredit(ENTRY_INJURED_ICEMAW, 0);
+                    player->ExitVehicle();
+                }
+            }
+        }
+
+        void UpdateAI(const uint32 /*diff*/)
+        {
+            if (!me->isCharmed() && !movementStarted)
+            {
+                movementStarted = true;
+                wp_reached = true;
+            }
+
+            if (wp_reached)
+            {
+                wp_reached = false;
+                me->GetMotionMaster()->MovePoint(count, HarnessedIcemawWaypoints[count]);
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_harnessed_icemawAI(creature);
+    }
+};
+
 void AddSC_storm_peaks()
 {
     new npc_agnetta_tyrsdottar;
@@ -826,4 +953,6 @@ void AddSC_storm_peaks()
     new npc_freed_protodrake;
     new npc_icefang;
     new npc_hyldsmeet_protodrake;
+    new npc_injured_icemaw;
+    new npc_harnessed_icemaw;
 }
