@@ -1,0 +1,1 @@
+UPDATE gameobject_template SET ScriptName='go_broggok_lever' WHERE entry=181982;
