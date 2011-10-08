@@ -12,6 +12,7 @@ set(scripts_STAT_SRCS
   ${scripts_STAT_SRCS}
     Custom/custom_fixes.cpp
     Custom/hyd_lottery.cpp
+    Custom/icc_rings_recovery.cpp
 )
 
 message("  -> Prepared: Custom")
