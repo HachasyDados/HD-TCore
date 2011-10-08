@@ -1252,6 +1252,7 @@ void AddBattlegroundScripts()
 /* This is where custom scripts' loading functions should be declared. */
 void AddSC_custom_fixes();
 void AddSC_hyd_lottery();
+void AddSC_icc_rep_rings();
 #endif
 
 void AddCustomScripts()
@@ -1260,5 +1261,6 @@ void AddCustomScripts()
     /* This is where custom scripts should be added. */
 AddSC_custom_fixes();
 AddSC_hyd_lottery();
+AddSC_icc_rep_rings();
 #endif
 }
