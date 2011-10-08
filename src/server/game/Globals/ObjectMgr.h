@@ -788,6 +788,10 @@ class ObjectMgr
                 return &itr->second;
             return NULL;
         }
+        QuestRelations* GetCreatureQuestInvolvedRelation()
+        {
+            return &mCreatureQuestInvolvedRelations;
+        }
 
         void LoadQuests();
         void LoadQuestRelations()
