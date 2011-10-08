@@ -205,6 +205,7 @@ public:
                 case DATA_MOB_ORB:                return uiPalehoofOrb;
                 case DATA_SVALA:                  return uiSvala;
                 case DATA_GORTOK_PALEHOOF_SPHERE: return uiGortokPalehoofSphere;
+                case DATA_SACRIFICED_PLAYER:      return uiSacrificedPlayer;
             }
 
             return 0;

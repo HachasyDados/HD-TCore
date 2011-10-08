@@ -2975,6 +2975,12 @@ void SpellMgr::LoadDbcDataCorrections()
 
         switch (spellInfo->Id)
         {
+            case 48278:
+                spellInfo->Targets = 1;
+                spellInfo->StackAmount = 3;
+                spellInfo->EffectImplicitTargetA[0] = TARGET_UNIT_TARGET_ENEMY;
+                spellInfo->EffectImplicitTargetB[0] = TARGET_UNIT_NEARBY_ENEMY;
+                break;
             case 42835: // Spout
                 spellInfo->Effect[0] = 0; // remove damage effect, only anim is needed
                 break;
