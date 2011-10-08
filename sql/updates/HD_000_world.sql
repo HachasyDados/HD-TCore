@@ -1,0 +1,1 @@
+update trinity_string set entry='3',content_default='[H&D] %s',content_loc1=NULL,content_loc2=NULL,content_loc3=NULL,content_loc4=NULL,content_loc5=NULL,content_loc6='[H&D] %s',content_loc7='[H&D] %s',content_loc8=NULL where entry='3';

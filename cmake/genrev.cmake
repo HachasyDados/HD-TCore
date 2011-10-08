@@ -33,13 +33,20 @@ if(_GIT_EXEC)
 endif()
 
 if(_GIT_VERSION_OK)
+  if(REV_INFO)
+  set(rev_info "${REV_INFO}")
+else()
   execute_process(
-    COMMAND "${_GIT_EXEC}" describe --match init --dirty=+ --abbrev=12
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    OUTPUT_VARIABLE rev_info
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
+  COMMAND "${_GIT_EXEC}" describe --match init --dirty=+ --abbrev=12
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE rev_info
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
   )
+endif()
+  if(REV_DATE)
+  set(rev_date "${REV_DATE}")
+else()
   execute_process(
     COMMAND "${_GIT_EXEC}" show -s --format=%ci
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -47,6 +54,7 @@ if(_GIT_VERSION_OK)
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
   )
+endif()
 else()
   message("")
   message(STATUS "WARNING - Missing or outdated git - did you forget to install a recent version?")
