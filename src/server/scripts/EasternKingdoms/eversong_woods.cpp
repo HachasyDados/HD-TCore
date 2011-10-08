@@ -599,11 +599,11 @@ public:
         {
             if (EndTimer < diff && Progress)
             {
-                DoScriptText(EMOTE, me);
                 Completed = true;
                 if (PlayerGUID)
-                    if (Player* player = Unit::GetPlayer(*me, PlayerGUID))
-                        CAST_PLR(player)->CompleteQuest(QUEST_POWERING_OUR_DEFENSES);
+                    if (Player* player = me->GetPlayer(*me, PlayerGUID))
+                        player->KilledMonsterCredit(16364, PlayerGUID);
+                me->DisappearAndDie();
 
                 me->DealDamage(me, me->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 me->RemoveCorpse();
