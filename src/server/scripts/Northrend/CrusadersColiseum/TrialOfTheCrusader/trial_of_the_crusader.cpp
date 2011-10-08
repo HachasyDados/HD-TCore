@@ -779,6 +779,7 @@ class npc_tirion_toc : public CreatureScript
                             break;
                         case 6005:
                             DoScriptText(SAY_STAGE_4_06, me);
+                            me->SummonGameObject(202079, 651.71f, 149.18f, 140.79f, 3.14f, 0, 0, 1, 1, 604800);
                             m_uiUpdateTimer = 20000;
                             m_instance->SetData(TYPE_EVENT, 6010);
                             break;

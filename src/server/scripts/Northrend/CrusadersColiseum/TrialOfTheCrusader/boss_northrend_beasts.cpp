@@ -123,6 +123,8 @@ public:
     {
         boss_gormokAI(Creature* creature) : ScriptedAI(creature), Summons(me)
         {
+            me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+            me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
             m_instance = (InstanceScript*)creature->GetInstanceScript();
         }
 
@@ -391,6 +393,8 @@ struct boss_jormungarAI : public ScriptedAI
 {
     boss_jormungarAI(Creature* creature) : ScriptedAI(creature)
     {
+        me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+        me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
         instanceScript = creature->GetInstanceScript();
     }
 
@@ -754,6 +758,8 @@ public:
     {
         boss_icehowlAI(Creature* creature) : ScriptedAI(creature)
         {
+            me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+            me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
             m_instance = (InstanceScript*)creature->GetInstanceScript();
         }
 
