@@ -335,8 +335,8 @@ void InstanceScript::DoCompleteAchievement(uint32 achievement)
 
     if (!PlayerList.isEmpty())
         for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            if (Player *pPlayer = i->getSource())
-                pPlayer->CompletedAchievement(pAE);
+            if (Player *player = i->getSource())
+                player->CompletedAchievement(pAE);
 }
 
 // Update Achievement Criteria for all players in instance
