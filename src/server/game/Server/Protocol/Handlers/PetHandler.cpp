@@ -761,6 +761,15 @@ void WorldSession::HandlePetCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
+    switch(spellId)
+    {
+          case 64077:
+            {
+              _player->CastSpell(caster, spellId, true);
+             return;
+        }
+    }
+
     if (spellInfo->StartRecoveryCategory > 0) // Check if spell is affected by GCD
         if (caster->GetTypeId() == TYPEID_UNIT && caster->GetCharmInfo() && caster->GetCharmInfo()->GetGlobalCooldownMgr().HasGlobalCooldown(spellInfo))
         {

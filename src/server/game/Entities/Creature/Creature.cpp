@@ -959,6 +959,15 @@ Player* Creature::GetLootRecipient() const
     return ObjectAccessor::FindPlayer(m_lootRecipient);
 }
 
+uint32 Creature::GetGossipTextId()
+{
+    if (!m_creatureInfo)
+        return DEFAULT_GOSSIP_MESSAGE;
+    if (m_creatureInfo->GossipMenuId)
+        return GetCreatureInfo()->GossipMenuId;
+    return DEFAULT_GOSSIP_MESSAGE;
+}
+
 Group* Creature::GetLootRecipientGroup() const
 {
     if (!m_lootRecipientGroup)
