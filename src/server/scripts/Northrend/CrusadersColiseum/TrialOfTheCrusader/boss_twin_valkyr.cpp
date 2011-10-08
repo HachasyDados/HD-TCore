@@ -143,6 +143,8 @@ struct boss_twin_baseAI : public ScriptedAI
 {
     boss_twin_baseAI(Creature* creature) : ScriptedAI(creature), Summons(me)
     {
+        me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+        me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
         m_instance = (InstanceScript*)creature->GetInstanceScript();
     }
 
