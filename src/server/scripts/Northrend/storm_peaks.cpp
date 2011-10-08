@@ -1117,6 +1117,25 @@ public:
         }
 };
 
+/*#################
+# go_uded_dispenser
+##################*/
+
+class go_uded_dispenser : public GameObjectScript
+{
+public:
+    go_uded_dispenser() : GameObjectScript("go_uded_dispenser") { }
+
+    bool OnGossipHello(Player *player, GameObject* /*pGO*/)
+    {
+        if (player->GetQuestStatus(12828) == QUEST_STATUS_INCOMPLETE)
+        {
+            player->CastSpell(player,54576,false);
+        }
+        return true;
+    }
+};
+
 void AddSC_storm_peaks()
 {
     new npc_agnetta_tyrsdottar;
@@ -1136,4 +1155,5 @@ void AddSC_storm_peaks()
     new npc_hyldsmeet_protodrake_hyd;
     new npc_column_ornament;
     new npc_dead_irongiant;
+    new go_uded_dispenser;
 }
