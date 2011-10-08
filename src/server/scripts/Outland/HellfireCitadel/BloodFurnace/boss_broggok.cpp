@@ -78,6 +78,7 @@ class boss_broggok : public CreatureScript
                 {
                     instance->SetData(TYPE_BROGGOK_EVENT, IN_PROGRESS);
                     instance->HandleGameObject(instance->GetData64(DATA_DOOR4), false);
+                    instance->HandleGameObject(instance->GetData64(DATA_DOOR5), false);
                 }
             }
 
@@ -139,7 +140,33 @@ class boss_broggok : public CreatureScript
         }
 };
 
+class go_broggok_lever : public GameObjectScript
+{
+public:
+    go_broggok_lever() : GameObjectScript("go_broggok_lever") { }
+
+    enum LeverData
+    {
+        NPC_LAUGHING_SKULL_WARDEN = 17624,
+        NPC_FEL_ORC_NEOPHYTE = 17429
+    };
+
+    bool OnGossipHello(Player* /*player*/, GameObject* go)
+    {
+        if (InstanceScript* instance = go->GetInstanceScript())
+        {
+            go->SummonCreature(NPC_LAUGHING_SKULL_WARDEN,464.566986f,54.492401f,9.614540f,1.621839f,TEMPSUMMON_CORPSE_DESPAWN,0);
+            go->SummonCreature(NPC_LAUGHING_SKULL_WARDEN,447.079010f,52.09660f,9.617910f,1.127570f,TEMPSUMMON_CORPSE_DESPAWN,0);
+            go->SummonCreature(NPC_FEL_ORC_NEOPHYTE,449.192993f,52.041500f,9.620020f,1.257160f,TEMPSUMMON_CORPSE_DESPAWN,0);
+            go->SummonCreature(NPC_FEL_ORC_NEOPHYTE,461.744995f,51.934700f,9.620450f,1.736250f,TEMPSUMMON_CORPSE_DESPAWN,0);
+            instance->HandleGameObject(instance->GetData64(DATA_DOOR5), true);
+        }
+        return true;
+    }
+};
+
 void AddSC_boss_broggok()
 {
     new boss_broggok();
+    new go_broggok_lever();
 }
