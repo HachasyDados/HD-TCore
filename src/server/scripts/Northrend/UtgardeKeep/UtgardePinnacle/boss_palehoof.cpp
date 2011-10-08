@@ -152,8 +152,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/)
+        void EnterCombat(Unit* who)
         {
+            me->GetMotionMaster()->MoveChase(who);
             DoScriptText(SAY_AGGRO, me);
         }
 
@@ -325,6 +326,11 @@ public:
                 }
         }
 
+        void EnterCombat(Unit* who)
+        {
+            me->GetMotionMaster()->MoveChase(who);
+        }
+
         void UpdateAI(const uint32 diff)
         {
             //Return since we have no target
@@ -436,6 +442,11 @@ public:
                     if (pPalehoof && pPalehoof->isAlive())
                         CAST_AI(boss_palehoof::boss_palehoofAI, pPalehoof->AI())->Reset();
                 }
+        }
+
+        void EnterCombat(Unit* who)
+        {
+            me->GetMotionMaster()->MoveChase(who);
         }
 
         void UpdateAI(const uint32 diff)
@@ -552,6 +563,11 @@ public:
                     if (pPalehoof && pPalehoof->isAlive())
                         CAST_AI(boss_palehoof::boss_palehoofAI, pPalehoof->AI())->Reset();
                 }
+        }
+
+        void EnterCombat(Unit* who)
+        {
+            me->GetMotionMaster()->MoveChase(who);
         }
 
         void UpdateAI(const uint32 diff)
@@ -672,6 +688,11 @@ public:
                     if (pPalehoof && pPalehoof->isAlive())
                         CAST_AI(boss_palehoof::boss_palehoofAI, pPalehoof->AI())->Reset();
                 }
+        }
+
+        void EnterCombat(Unit* who)
+        {
+            me->GetMotionMaster()->MoveChase(who);
         }
 
         void UpdateAI(const uint32 diff)
@@ -843,6 +864,10 @@ public:
         {
             pGO->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
             pGO->SetGoState(GO_STATE_ACTIVE);
+
+            if(InstanceScript* instance = pGO->GetInstanceScript())
+                if(instance->GetData(DATA_GORTOK_PALEHOOF_EVENT) == IN_PROGRESS)
+                    return true;
 
             CAST_AI(boss_palehoof::boss_palehoofAI, pPalehoof->AI())->NextPhase();
         }
