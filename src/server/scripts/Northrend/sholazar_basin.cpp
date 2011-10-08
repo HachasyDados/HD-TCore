@@ -674,7 +674,7 @@ const Position CaptiveCrocWaypoints[32] =
     {5253.46f, 4394.40f, -95.0352f, 0.0f},
     {5263.19f, 4365.86f, -98.5669f, 0.0f},
     {5284.49f, 4366.25f, -101.402f, 0.0f},
-    {5297.54f, 4358.85f, -105.052, 0.0f},
+    {5297.54f, 4358.85f, -105.052f, 0.0f},
     {5354.68f, 4361.32f, -128.512f, 0.0f},
     {5378.45f, 4313.85f, -147.025f, 0.0f},
     {5418.90f, 4345.02f, -146.904f, 0.0f},
@@ -812,6 +812,19 @@ public:
     }
 };
 
+enum HarkekDefines
+{
+    QUEST_ROUGH_RIDE       = 12536,
+    QUEST_SAPPHIRE_QUEEN   = 12534,
+    QUEST_APE_HUNTER_SLAVE = 12529,
+    SPELL_ADDITEM_ZEPIK    = 52545,
+    ITEM_ZEPIK             = 38512,
+    SPELL_ADDITEM_DAJIK    = 52544,
+    ITEM_DAJIK             = 38621,
+    SPELL_ADDITEM_GOREGEK  = 52542,
+    ITEM_GOREGEK           = 38619,
+};
+
 #define GOSSIP_ITEM_ZEPIK "Necesito comunicarme con Zepik."
 #define GOSSIP_ITEM_DAJIK "Necesito comunicarme con Dajik."
 #define GOSSIP_ITEM_GOREGEK "Necesito comunicarme con Goregek."
@@ -823,15 +836,20 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
+        if (creature->isQuestGiver())
+            player->PrepareQuestMenu(creature->GetGUID());
 
-        if (player->GetQuestStatus(12536) == QUEST_STATUS_COMPLETE)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ZEPIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        if (player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_REWARDED)
+            if(!player->HasItemCount(ITEM_ZEPIK, 1, true))
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ZEPIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
-        if (player->GetQuestStatus(12534) == QUEST_STATUS_COMPLETE)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DAJIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+        if (player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_REWARDED)
+            if(!player->HasItemCount(ITEM_DAJIK, 1, true))
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DAJIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
 
-        if (player->GetQuestStatus(12529) == QUEST_STATUS_COMPLETE)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GOREGEK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+        if (player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_REWARDED)
+            if(!player->HasItemCount(ITEM_GOREGEK, 1, true))
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GOREGEK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
 
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
 
@@ -842,10 +860,10 @@ public:
     {
         player->CLOSE_GOSSIP_MENU();
         switch (action)
-          {
-            case GOSSIP_ACTION_INFO_DEF+1: player->CastSpell(player, 52545, false); break;
-            case GOSSIP_ACTION_INFO_DEF+2: player->CastSpell(player, 52544, false); break;
-            case GOSSIP_ACTION_INFO_DEF+3: player->CastSpell(player, 52542, false); break;
+        {
+            case GOSSIP_ACTION_INFO_DEF+1: player->CastSpell(player, SPELL_ADDITEM_ZEPIK, false); break;
+            case GOSSIP_ACTION_INFO_DEF+2: player->CastSpell(player, SPELL_ADDITEM_DAJIK, false); break;
+            case GOSSIP_ACTION_INFO_DEF+3: player->CastSpell(player, SPELL_ADDITEM_GOREGEK, false); break;
         }
         return true;
     }
