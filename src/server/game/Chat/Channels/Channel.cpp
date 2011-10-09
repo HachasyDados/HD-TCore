@@ -799,15 +799,15 @@ void Channel::MakeNotifyPacket(WorldPacket* data, uint8 notify_type)
 // done 0x00
 void Channel::MakeJoined(WorldPacket* data, uint64 guid)
 {
-    MakeNotifyPacket(data, CHAT_JOINED_NOTICE);
-    *data << uint64(guid);
+    /*MakeNotifyPacket(data, CHAT_JOINED_NOTICE);
+    *data << uint64(guid);*/
 }
 
 // done 0x01
 void Channel::MakeLeft(WorldPacket* data, uint64 guid)
 {
-    MakeNotifyPacket(data, CHAT_LEFT_NOTICE);
-    *data << uint64(guid);
+    /*MakeNotifyPacket(data, CHAT_LEFT_NOTICE);
+    *data << uint64(guid);*/
 }
 
 // done 0x02
