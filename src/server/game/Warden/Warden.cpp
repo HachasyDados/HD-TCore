@@ -207,6 +207,10 @@ std::string Warden::Penalty()
 {
     uint32 action = sWorld->getIntConfig(CONFIG_WARDEN_CLIENT_FAIL_ACTION);
 
+    // Send warning to ingame GMs
+    if (_session->GetPlayer())
+        sWorld->SendGMText(LANG_CHEATER_CHATLOG, "Warden", _session->GetPlayer()->GetName());
+
     switch (action)
     {
     case 0:
