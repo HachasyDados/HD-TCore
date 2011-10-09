@@ -323,14 +323,11 @@ void AnticheatMgr::BuildReport(Player* player,uint8 reportType)
         m_Players[key].SetAverage(average);
     }
 
+    // Send warning to ingame GMs
     if (m_Players[key].GetTotalReports() > sWorld->getIntConfig(CONFIG_ANTICHEAT_REPORTS_INGAME_NOTIFICATION))
     {
-        // display warning at the center of the screen, hacky way?
-        std::string str = "";
-        str = "|cFFFFFC00[AC]|cFF00FFFF[|cFF60FF00" + std::string(player->GetName()) + "|cFF00FFFF] Possible cheater!";
-        WorldPacket data(SMSG_NOTIFICATION, (str.size()+1));
-        data << str;
-        sWorld->SendGlobalGMMessage(&data);
+        sLog->outWarden("Passive AntiCheat: %s detected as possible cheater. HackType: %u.", player->GetName(), reportType);
+        sWorld->SendGMText(LANG_CHEATER_CHATLOG, "AntiCheat", player->GetName());
     }
 }
 
