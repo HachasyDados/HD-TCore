@@ -1720,6 +1720,118 @@ public:
     }
 };
 
+enum evergroveData
+{
+    SPELL_DRUID_SIGNAL = 38782,
+    SPELL_DRUID_FORM   = 39158,
+    SPELL_CROW_FORM    = 38776,
+
+    QUEST_DEATH_DOOR   = 10910,
+    ITEM_DRUID_SIGNAL  = 31763,
+};
+class npc_evergrove_druid : public CreatureScript
+{
+public:
+    npc_evergrove_druid() : CreatureScript("npc_evergrove_druid") { }
+
+    struct npc_evergrove_druidAI : public ScriptedAI
+    {
+        npc_evergrove_druidAI(Creature* creature) : ScriptedAI(creature) { }
+
+        Player* player;
+        Position playerPos;
+        bool summoned;
+        float x,y,z;
+
+        void Reset()
+        {
+            // Reset all variables
+            me->SetFlying(true);
+            me->SetSpeed(MOVE_FLIGHT, 3.2f, true);
+            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER | UNIT_NPC_FLAG_GOSSIP);
+            me->SetVisible(false);
+            player = NULL;
+            summoned = false;
+        }
+
+        void SpellHit(Unit* caster, SpellInfo const* spell)
+        {
+            if(summoned)
+                return;
+
+            if(spell->Id == SPELL_DRUID_SIGNAL)
+            {
+                summoned = true;
+
+                if(caster)
+                    player = caster->ToPlayer();
+
+                // Prepare visuals
+                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER | UNIT_NPC_FLAG_GOSSIP);
+                me->SetUInt64Value(UNIT_FIELD_TARGET, player->GetGUID());
+                me->SetVisible(true);
+                me->CastSpell(me, SPELL_CROW_FORM, true);
+
+                // Move to player
+                if(player)
+                {
+                    x = player->GetPositionX(); y = player->GetPositionY(); z = player->GetPositionZ();
+                    me->GetMotionMaster()->MovePoint(0, x, y, z);
+                }
+            }
+        }
+
+        void MovementInform(uint32 type, uint32 id)
+        {
+            if(!player)
+                return;
+
+            me->UpdatePosition( x, y, z, 0.0f, true);
+            if(!player->IsFlying())
+            {
+                me->CastSpell(me, SPELL_DRUID_FORM, true);
+                me->RemoveAurasDueToSpell(SPELL_CROW_FORM);
+                me->SetFlying(false);
+                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STAND);
+            }
+            me->DespawnOrUnsummon(60000);
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_evergrove_druidAI(creature);
+    }
+};
+
+#define GOSSIP_ITEM_DRUID_SIGNAL "He perdido mi Señal para druida."
+
+class npc_antelarion_gossip : public CreatureScript
+{
+public:
+    npc_antelarion_gossip() : CreatureScript("npc_antelarion_gossip") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+    {
+        if (creature->isQuestGiver())
+            player->PrepareQuestMenu(creature->GetGUID());
+
+        if ((player->GetQuestStatus(QUEST_DEATH_DOOR) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(QUEST_DEATH_DOOR) == QUEST_STATUS_REWARDED) && !player->HasItemCount(ITEM_DRUID_SIGNAL, 1))
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DRUID_SIGNAL, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*uiSender*/, uint32 uiAction)
+    {
+        player->CLOSE_GOSSIP_MENU();
+        player->AddItem(ITEM_DRUID_SIGNAL, 1);
+        return true;
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -1746,4 +1858,6 @@ void AddSC_custom_fixes()
     new spell_fumping_39246();
     new npc_signal_fire();
     new npc_keristrasza_coldarra();
+    new npc_evergrove_druid();
+    new npc_antelarion_gossip();
 }
