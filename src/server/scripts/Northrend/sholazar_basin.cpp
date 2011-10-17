@@ -172,8 +172,8 @@ public:
 ## npc_vekjik
 ######*/
 
-#define GOSSIP_VEKJIK_ITEM1 "Shaman Vekjik, I have spoken with the big-tongues and they desire peace. I have brought this offering on their behalf."
-#define GOSSIP_VEKJIK_ITEM2 "No no... I had no intentions of betraying your people. I was only defending myself. it was all a misunderstanding."
+#define GOSSIP_VEKJIK_ITEM1 "Chaman Vekjik, he hablado con los lenguas-grandes y desean la paz. He traido esta ofrenda en su nombre."    //"Shaman Vekjik, I have spoken with the big-tongues and they desire peace. I have brought this offering on their behalf."
+#define GOSSIP_VEKJIK_ITEM2 "No no... no tengo intención de traicionar a tu gente. Solo intentaba defenderme, fue todo un malentendido." //"No no... I had no intentions of betraying your people. I was only defending myself. it was all a misunderstanding."
 
 enum eVekjik
 {
@@ -220,6 +220,7 @@ public:
             case GOSSIP_ACTION_INFO_DEF+2:
                 player->CLOSE_GOSSIP_MENU();
                 DoScriptText(SAY_TEXTID_VEKJIK1, creature, player);
+                creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK_DEST, true);
                 player->AreaExploredOrEventHappens(QUEST_MAKING_PEACE);
                 creature->CastSpell(player, SPELL_FREANZYHEARTS_FURY, false);
                 break;
