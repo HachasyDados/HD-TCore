@@ -29,9 +29,9 @@ set(scripts_STAT_SRCS
   Commands/cs_tele.cpp
   Commands/cs_titles.cpp
   Commands/cs_wp.cpp
+  Commands/cs_wg.cpp
 #  Commands/cs_character.cpp
-#  Commands/cs_list.cpp
-#  Commands/cs_lookup.cpp
+#  Commands/cs_list.cpp#  Commands/cs_lookup.cpp
 #  Commands/cs_pdump.cpp
 #  Commands/cs_guild.cpp
 #  Commands/cs_cast.cpp
