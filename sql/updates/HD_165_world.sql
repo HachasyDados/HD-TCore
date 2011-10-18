@@ -1,0 +1,1 @@
+UPDATE `creature_template` SET `ScriptName` = 'npc_sholazar_faction_item_recover' WHERE `entry` IN (28138, 28027);

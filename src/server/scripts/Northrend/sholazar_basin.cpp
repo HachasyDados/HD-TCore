@@ -813,44 +813,78 @@ public:
     }
 };
 
-enum HarkekDefines
+enum SholazarItemRecoverDefines
 {
-    QUEST_ROUGH_RIDE       = 12536,
-    QUEST_SAPPHIRE_QUEEN   = 12534,
-    QUEST_APE_HUNTER_SLAVE = 12529,
-    SPELL_ADDITEM_ZEPIK    = 52545,
-    ITEM_ZEPIK             = 38512,
-    SPELL_ADDITEM_DAJIK    = 52544,
-    ITEM_DAJIK             = 38621,
-    SPELL_ADDITEM_GOREGEK  = 52542,
-    ITEM_GOREGEK           = 38619,
+    NPC_HARKEK              = 28138,
+    NPC_SOO_SAY             = 28027,
+
+    QUEST_ROUGH_RIDE        = 12536,
+    QUEST_SAPPHIRE_QUEEN    = 12534,
+    QUEST_APE_HUNTER_SLAVE  = 12529,
+    SPELL_ADDITEM_ZEPIK     = 52545,
+    ITEM_ZEPIK              = 38512,
+    SPELL_ADDITEM_DAJIK     = 52544,
+    ITEM_DAJIK              = 38621,
+    SPELL_ADDITEM_GOREGEK   = 52542,
+    ITEM_GOREGEK            = 38619,
+
+    QUEST_MISUNDERSTANDINGS = 12570,
+    //QUEST_MAKING_PEACE      = 12573, Already defined
+    QUEST_HOME_TIME         = 12577,
+    SPELL_ADDITEM_LAFOO     = 52547,
+    ITEM_LAFOO              = 38622,
+    SPELL_ADDITEM_JALOOT    = 52548,
+    ITEM_JALOOT             = 38623,
+    SPELL_ADDITEM_MOODLE    = 52549,
+    ITEM_MOODLE             = 38624,
 };
 
-#define GOSSIP_ITEM_ZEPIK "Necesito comunicarme con Zepik."
-#define GOSSIP_ITEM_DAJIK "Necesito comunicarme con Dajik."
+#define GOSSIP_ITEM_ZEPIK   "Necesito comunicarme con Zepik."
+#define GOSSIP_ITEM_DAJIK   "Necesito comunicarme con Dajik."
 #define GOSSIP_ITEM_GOREGEK "Necesito comunicarme con Goregek."
+#define GOSSIP_ITEM_LAFOO   "Necesito comunicarme con Lafoo."
+#define GOSSIP_ITEM_JALOOT  "Necesito comunicarme con Jaloot."
+#define GOSSIP_ITEM_MOODLE  "Necesito comunicarme con Moodle."
 
-class npc_harkek_gossip : public CreatureScript
+class npc_sholazar_faction_item_recover : public CreatureScript
 {
 public:
-    npc_harkek_gossip() : CreatureScript("npc_harkek_gossip") { }
+    npc_sholazar_faction_item_recover() : CreatureScript("npc_sholazar_faction_item_recover") { }
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
         if (creature->isQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
-        if (player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_REWARDED)
-            if(!player->HasItemCount(ITEM_ZEPIK, 1, true))
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ZEPIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        switch (creature->GetEntry())
+        {
+            case NPC_HARKEK:
+                if (player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_ROUGH_RIDE) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_ZEPIK, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ZEPIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
-        if (player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_REWARDED)
-            if(!player->HasItemCount(ITEM_DAJIK, 1, true))
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DAJIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+                if (player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_SAPPHIRE_QUEEN) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_DAJIK, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_DAJIK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
 
-        if (player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_REWARDED)
-            if(!player->HasItemCount(ITEM_GOREGEK, 1, true))
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GOREGEK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+                if (player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_APE_HUNTER_SLAVE) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_GOREGEK, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_GOREGEK, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+                break;
+            case NPC_SOO_SAY:
+                if (player->GetQuestStatus(QUEST_MISUNDERSTANDINGS) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_MISUNDERSTANDINGS) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_LAFOO, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_LAFOO, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
+
+                if (player->GetQuestStatus(QUEST_MAKING_PEACE) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_MAKING_PEACE) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_JALOOT, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_JALOOT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+5);
+
+                if (player->GetQuestStatus(QUEST_HOME_TIME) == QUEST_STATUS_COMPLETE || player->GetQuestStatus(QUEST_HOME_TIME) == QUEST_STATUS_REWARDED)
+                    if(!player->HasItemCount(ITEM_MOODLE, 1, true))
+                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_MOODLE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+6);
+                break;
+        }
 
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
 
@@ -865,6 +899,9 @@ public:
             case GOSSIP_ACTION_INFO_DEF+1: player->CastSpell(player, SPELL_ADDITEM_ZEPIK, false); break;
             case GOSSIP_ACTION_INFO_DEF+2: player->CastSpell(player, SPELL_ADDITEM_DAJIK, false); break;
             case GOSSIP_ACTION_INFO_DEF+3: player->CastSpell(player, SPELL_ADDITEM_GOREGEK, false); break;
+            case GOSSIP_ACTION_INFO_DEF+4: player->CastSpell(player, SPELL_ADDITEM_LAFOO, false); break;
+            case GOSSIP_ACTION_INFO_DEF+5: player->CastSpell(player, SPELL_ADDITEM_JALOOT, false); break;
+            case GOSSIP_ACTION_INFO_DEF+6: player->CastSpell(player, SPELL_ADDITEM_MOODLE, false); break;
         }
         return true;
     }
@@ -1092,7 +1129,7 @@ void AddSC_sholazar_basin()
     new npc_jungle_punch_target();
     new npc_captive_croco_gossip();
     new npc_captive_croco_vehicle();
-    new npc_harkek_gossip();
+    new npc_sholazar_faction_item_recover();
     new go_still_tools();
     new npc_tipsy_gossip();
 }
