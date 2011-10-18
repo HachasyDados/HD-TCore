@@ -450,6 +450,14 @@ void GameObject::Update(uint32 diff)
                         if (goInfo->trap.spellId)
                             CastSpell(ok, goInfo->trap.spellId);
 
+                        // Traps should put caster in combat and activate PvP mode
+                        if (owner && owner->isAlive())
+                            owner->CombatStart(ok);
+
+                        if (ok->GetTypeId() == TYPEID_PLAYER)
+                            if (sScriptMgr->OnGossipHello(ok->ToPlayer(), this))
+                                return;
+
                         m_cooldownTime = time(NULL) + (goInfo->trap.cooldown ? goInfo->trap.cooldown :  uint32(4));   // template or 4 seconds
 
                         if (goInfo->trap.type == 1)
@@ -1785,10 +1793,12 @@ void GameObject::SetDestructibleState(GameObjectDestructibleState state, Player*
         case GO_DESTRUCTIBLE_DAMAGED:
         {
             EventInform(m_goInfo->building.damagedEvent);
-            sScriptMgr->OnGameObjectDamaged(this, eventInvoker);
             if (eventInvoker)
+            {
+                sScriptMgr->OnGameObjectDamaged(this, eventInvoker);
                 if (Battleground* bg = eventInvoker->GetBattleground())
                     bg->EventPlayerDamagedGO(eventInvoker, this, m_goInfo->building.damagedEvent);
+            }
 
             RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
             SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DAMAGED);
@@ -1797,6 +1807,8 @@ void GameObject::SetDestructibleState(GameObjectDestructibleState state, Player*
             if (DestructibleModelDataEntry const* modelData = sDestructibleModelDataStore.LookupEntry(m_goInfo->building.destructibleData))
                 if (modelData->DamagedDisplayId)
                     modelId = modelData->DamagedDisplayId;
+            //Temporary hack for WG Fortress towers when it cannot be damaged after been half damaged
+            if (m_goInfo->entry != 190378 && m_goInfo->entry != 190377 && m_goInfo->entry != 190373 && m_goInfo->entry != 190221)
             SetUInt32Value(GAMEOBJECT_DISPLAYID, modelId);
 
             if (setHealth)
@@ -1812,10 +1824,10 @@ void GameObject::SetDestructibleState(GameObjectDestructibleState state, Player*
         }
         case GO_DESTRUCTIBLE_DESTROYED:
         {
-            sScriptMgr->OnGameObjectDestroyed(this, eventInvoker);
             EventInform(m_goInfo->building.destroyedEvent);
             if (eventInvoker)
             {
+                sScriptMgr->OnGameObjectDestroyed(this, eventInvoker);
                 if (Battleground* bg = eventInvoker->GetBattleground())
                 {
                     bg->EventPlayerDamagedGO(eventInvoker, this, m_goInfo->building.destroyedEvent);

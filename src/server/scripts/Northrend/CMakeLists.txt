@@ -198,6 +198,7 @@ set(scripts_STAT_SRCS
   Northrend/RubySanctum/boss_zarithrian.cpp
   Northrend/RubySanctum/instance_ruby_sanctum.cpp
   Northrend/RubySanctum/ruby_sanctum.h
+  Northrend/wintergrasp.cpp
 )
 
 message("  -> Prepared: Northrend")
