@@ -49,6 +49,7 @@
 #include "BattlegroundEY.h"
 #include "BattlegroundWS.h"
 #include "OutdoorPvPMgr.h"
+#include "OutdoorPvPWG.h"
 #include "Language.h"
 #include "SocialMgr.h"
 #include "Util.h"
@@ -4464,6 +4465,29 @@ void Spell::EffectScriptEffect(SpellEffIndex effIndex)
         {
             switch (m_spellInfo->Id)
             {
+                //Teleport to Lake Wintergrasp
+                case 58622:
+                {
+                    if (OutdoorPvPWG *pvpWG = (OutdoorPvPWG*)sOutdoorPvPMgr->GetOutdoorPvPToZoneId(4197))
+                        if (unitTarget->getLevel() > 74)
+                        {
+                            if (pvpWG->getDefenderTeam() == TEAM_ALLIANCE)
+                            {
+                                if (unitTarget->ToPlayer()->GetTeam() == ALLIANCE)
+                                    unitTarget->CastSpell(unitTarget, SPELL_TELEPORT_FORTRESS, true);
+                                else
+                                    unitTarget->CastSpell(unitTarget, SPELL_TELEPORT_HORDE_CAMP, true);
+                            }
+                            else
+                            {
+                                if (unitTarget->ToPlayer()->GetTeam() == HORDE)
+                                    unitTarget->CastSpell(unitTarget, SPELL_TELEPORT_FORTRESS, true);
+                                else
+                                    unitTarget->CastSpell(unitTarget, SPELL_TELEPORT_ALLIANCE_CAMP, true);
+                            }
+                        }
+                    return;
+                }
                 // Glyph of Backstab
                 case 63975:
                 {
@@ -7291,6 +7315,24 @@ void Spell::EffectPlayerNotification(SpellEffIndex effIndex)
     switch (m_spellInfo->Id)
     {
         case 58730: // Restricted Flight Area
+        {
+            if (sWorld->getBoolConfig(CONFIG_OUTDOORPVP_WINTERGRASP_ENABLED))
+            {
+                OutdoorPvPWG *pvpWG = (OutdoorPvPWG*)sOutdoorPvPMgr->GetOutdoorPvPToZoneId(4197);
+                if (pvpWG->isWarTime() == true)
+                {
+                    if (unitTarget->ToPlayer()->isDead()) // Prevent Spam when player is dead
+                        break;
+
+                    unitTarget->ToPlayer()->GetSession()->SendNotification(LANG_ZONE_NOFLYZONE);
+                    unitTarget->PlayDirectSound(9417); // Fel Reaver sound
+                    unitTarget->MonsterTextEmote("El aire es demasiado denso en Conquista del Invierno para volar. Seras desmontado en 9 segundos.", unitTarget->GetGUID(), true);
+                }
+                else
+                    unitTarget->RemoveAura(58730);
+            }
+            break;
+        }
         case 58600: // Restricted Flight Area
             unitTarget->ToPlayer()->GetSession()->SendNotification(LANG_ZONE_NOFLYZONE);
             break;

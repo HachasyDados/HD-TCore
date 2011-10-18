@@ -47,13 +47,18 @@ Vehicle::Vehicle(Unit* unit, VehicleEntry const* vehInfo, uint32 creatureEntry) 
     switch (GetVehicleInfo()->m_ID)
     {
         case 160:
+        case 116:
             _me->SetControlled(true, UNIT_STAT_ROOT);
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK_DEST, true);
+       case 117:
+       case 324:
+       case 158:
+       case 79:
+       case 106:
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_HEAL_PCT, true);
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_ATTACK_ME, true);
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_DISPEL, true);
-        case 158:
             _me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_HEAL, true);
             _me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_FEAR, true);
             _me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_PERIODIC_HEAL, true);
@@ -370,6 +375,7 @@ bool Vehicle::AddPassenger(Unit* unit, int8 seatId)
         unit->AddUnitState(UNIT_STAT_ONVEHICLE);
 
     unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    unit->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
     VehicleSeatEntry const* veSeat = seat->second.SeatInfo;
     unit->m_movementInfo.t_pos.m_positionX = veSeat->m_attachmentOffsetX;
     unit->m_movementInfo.t_pos.m_positionY = veSeat->m_attachmentOffsetY;
@@ -433,6 +439,7 @@ void Vehicle::RemovePassenger(Unit* unit)
     }
 
     unit->ClearUnitState(UNIT_STAT_ONVEHICLE);
+    unit->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, false);
 
     if (_me->GetTypeId() == TYPEID_UNIT && unit->GetTypeId() == TYPEID_PLAYER && seat->first == 0 && seat->second.SeatInfo->m_flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
         _me->RemoveCharmedBy(unit);
@@ -532,4 +539,30 @@ uint8 Vehicle::GetAvailableSeatCount() const
             ++ret;
 
     return ret;
+}
+
+void Vehicle::Relocate(Position pos)
+{
+    sLog->outDebug(LOG_FILTER_VEHICLES, "Vehicle::Relocate %u", _me->GetEntry());
+
+    std::set<Unit*> vehiclePlayers;
+    for (int8 i = 0; i < 8; i++)
+        vehiclePlayers.insert(GetPassenger(i));
+
+    // passengers should be removed or they will have movement stuck
+    RemoveAllPassengers();
+
+    for (std::set<Unit*>::const_iterator itr = vehiclePlayers.begin(); itr != vehiclePlayers.end(); ++itr)
+    {
+        if (Unit* plr = *itr)
+        {
+            // relocate/setposition doesn't work for player
+            plr->NearTeleportTo(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
+            //plr->TeleportTo(pPlayer->GetMapId(), triggerPos.GetPositionX(), triggerPos.GetPositionY(), triggerPos.GetPositionZ(), triggerPos.GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT);
+        }
+    }
+
+    _me->UpdatePosition(pos, true);
+    // problems, and impossible to do delayed enter
+    //pPlayer->EnterVehicle(veh);
 }
