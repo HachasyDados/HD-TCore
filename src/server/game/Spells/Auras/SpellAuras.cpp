@@ -1125,6 +1125,25 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                     }
                 }
                 break;
+            case SPELLFAMILY_HUNTER:
+                // Rapid Killing
+                if (GetSpellInfo()->SpellFamilyFlags[1] & 0x01000000)
+                {
+                    // Rapid Recuperation
+                    // FIXME: this is completely wrong way to fixing this talent
+                    // but for unknown reason it won't proc if your target are dead
+                    if (AuraEffect * auraEff = target->GetAuraEffect(SPELL_AURA_DUMMY, SPELLFAMILY_HUNTER, 3560, 1))
+                    {
+                        uint32 spellId;
+                        switch (auraEff->GetId())
+                        {
+                            case 53228: spellId = 56654; break;
+                            case 53232: spellId = 58882; break;
+                        }
+                        target->CastSpell(target, spellId, true);
+                    }
+                }
+                break;
             case SPELLFAMILY_MAGE:
                 if (!caster)
                     break;
