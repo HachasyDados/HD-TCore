@@ -1728,6 +1728,84 @@ void LFGMgr::TeleportPlayer(Player* plr, bool out, bool fromOpcode /*= false*/)
                 }
             }
 
+            // FIXME
+            switch (dungeon->ID)
+                {
+                    // world events
+                    case 285: // The Headless Horseman
+                        mapid = 189;
+                        x = 1793.837f;
+                        y = 1347.15f;
+                        z = 20.38f;
+                        orientation = 3.17f;
+                        break;
+                    case 286: // The Frost Lord Ahune
+                        break;
+                    case 287: // Coren Direbrew
+                        mapid = 230;
+                        x = 907.299f;
+                        y = -156.689f;
+                        z = -47.75f;
+                        orientation = 2.108f;
+                        break;
+                    case 288: // The Crown Chemical Co.
+                        break;
+                    // normal dungeons
+                    case 14: // Gnomeregan
+                        mapid = 90;
+                        x = -332.22f;
+                        y = -2.28f;
+                        z = -150.86f;
+                        orientation = 2.77f;
+                        break;
+                    case 22: // Uldaman
+                        mapid = 70;
+                        x = -226.8f;
+                        y = 49.09f;
+                        z = -46.03f;
+                        orientation = 1.39f;
+                        break;
+                    case 30: // Blackrock Depths - Prison
+                    case 276: // Blackrock Depths - Upper City
+                        mapid = 230;
+                        x = 458.32f;
+                        y = 26.52f;
+                        z = -70.67f;
+                        orientation = 4.95f;
+                        break;
+                    case 163: // Scarlet Monastery - Armory
+                        mapid = 189;
+                        x = 1610.83f;
+                        y = -323.433f;
+                        z = 18.6738f;
+                        orientation = 6.28022f;
+                        break;
+                    case 164: // Scarlet Monastery - Cathedral
+                        mapid = 189;
+                        x = 855.683f;
+                        y = 1321.5f;
+                        z = 18.6709f;
+                        orientation = 0.001747f;
+                        break;
+                    case 165: // Scarlet Monastery - Library
+                        mapid = 189;
+                        x = 255.346f;
+                        y = -209.09f;
+                        z = 18.6773f;
+                        orientation = 6.26656f;
+                        break;
+                    case 216: // Gundrak
+                    case 217: // Gundrak (Heroic)
+                        mapid = 604;
+                        x = 1894.58f;
+                        y = 652.713f;
+                        z = 176.666f;
+                        orientation = 4.078f;
+                        break;
+                    default:
+                        break;
+                }
+
             if (error == LFG_TELEPORTERROR_OK)
             {
                 if (!plr->GetMap()->IsDungeon() && !plr->GetMap()->IsRaid())
@@ -1799,7 +1877,7 @@ void LFGMgr::RewardDungeonDoneFor(const uint32 dungeonId, Player* player)
 
     // Give rewards only if its a random dungeon
     LFGDungeonEntry const* dungeon = sLFGDungeonStore.LookupEntry(rDungeonId);
-    if (!dungeon || dungeon->type != LFG_TYPE_RANDOM)
+    if (!dungeon || (dungeon->type != LFG_TYPE_RANDOM && dungeon->grouptype != 11))
     {
         sLog->outDebug(LOG_FILTER_LFG, "LFGMgr::RewardDungeonDoneFor: [" UI64FMTD "] dungeon %u is not random", guid, rDungeonId);
         return;
