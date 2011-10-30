@@ -16,6 +16,7 @@
  */
 
 #include "ScriptPCH.h"
+#include "Spell.h"
 #include "Vehicle.h"
 #include "ScriptedEscortAI.h"
 
@@ -3738,6 +3739,522 @@ private:
     uint64 tartekGUID;
 };
 
+enum HalloweenData
+{
+    NPC_STINKY_BOMB_CREDIT = 15415,
+
+    GO_STINKY_BOMB_FLASK   = 180449,
+    GO_STINKY_BOMB_CLOUD   = 180450,
+
+    QUEST_CRASHING_WICKERMAN_FESTIVAL = 1658,
+
+    SPELL_PIRATE_COSTUME_MALE           = 24708,
+    SPELL_PIRATE_COSTUME_FEMALE         = 24709,
+    SPELL_NINJA_COSTUME_MALE            = 24711,
+    SPELL_NINJA_COSTUME_FEMALE          = 24710,
+    SPELL_LEPER_GNOME_COSTUME_MALE      = 24712,
+    SPELL_LEPER_GNOME_COSTUME_FEMALE    = 24713,
+    SPELL_GHOST_COSTUME_MALE            = 24735,
+    SPELL_GHOST_COSTUME_FEMALE          = 24736,
+
+
+    SPELL_HALLOWEEN_WAND_PIRATE         = 24717,
+    SPELL_HALLOWEEN_WAND_NINJA          = 24718,
+    SPELL_HALLOWEEN_WAND_LEPER_GNOME    = 24719,
+    SPELL_HALLOWEEN_WAND_RANDOM         = 24720,
+    SPELL_HALLOWEEN_WAND_SKELETON       = 24724,
+    SPELL_HALLOWEEN_WAND_WISP           = 24733,
+    SPELL_HALLOWEEN_WAND_GHOST          = 24737,
+    SPELL_HALLOWEEN_WAND_BAT            = 24741,
+
+    SPELL_GRIM_VISAGE                   = 24705,
+
+    // Headless Horseman fire event
+    NPC_HEADLESS_FIRE                   = 23537,
+    NPC_FIRE_DUMMY                      = 1,
+    GO_FIRE_EFFIGY                      = 186720,
+
+
+    SPELL_FIRE_CREATE_NODE              = 42118,
+    SPELL_WATER_SPOUT_VISUAL            = 42348,
+    SPELL_FIRE_VISUAL_BUFF              = 42074,
+    SPELL_FIRE_SIZE_STACK               = 42091,
+    SPELL_FIRE_STARTING_SIZE            = 42096,
+    SPELL_QUESTS_CREDITS                = 42242,
+    SPELL_CREATE_WATER_BUCKET           = 42349,
+};
+
+#define FIRE_NODES_COUNT   44
+#define FIRE_NODES_AREA_1  24
+
+const Position FireNodes[FIRE_NODES_COUNT] =
+{
+    {-9452.32f,89.21f,66.35f,0.00f},
+    {-9453.93f,98.64f,67.11f,0.00f},
+    {-9470.40f,104.78f,57.53f,0.00f},
+    {-9469.78f,84.49f,57.38f,0.00f},
+    {-9464.15f,80.77f,57.11f,0.00f},
+    {-9467.37f,25.74f,74.42f,0.00f},
+    {-9459.17f,43.81f,64.30f,0.00f},
+    {-9459.21f,33.66f,71.84f,0.00f},
+    {-9461.95f,3.09f,74.99f,0.00f},
+    {-9463.41f,-8.01f,75.85f,0.00f},
+    {-9474.55f,8.78f,56.71f,0.00f},
+    {-9481.45f,27.83f,57.77f,0.00f},
+    {-9474.03f,42.87f,56.54f,0.00f},
+    {-9473.57f,35.36f,75.05f,0.00f},
+    {-9475.71f,13.89f,75.12f,0.00f},
+    {-9461.18f,103.72f,69.37f,0.00f},
+    {-9467.74f,89.61f,66.85f,0.00f},
+    {-9456.99f,84.41f,68.21f,0.00f},
+    {-9452.48f,31.63f,58.05f,0.00f},
+    {-9454.56f,2.26f,56.65f,0.00f},
+    {-9462.34f,-11.62f,56.46f,0.00f},
+    {-9435.92f,106.49f,57.36f,0.00f},
+    {-9455.02f,41.84f,56.93f,0.00f},
+    {-9448.84f,86.77f,56.91f,0.00f},
+    {-9454.83f,80.65f,57.04f,0.00f}, // AREA1
+    {340.81f,-4709.51f,16.82f,0.00f},
+    {314.60f,-4772.68f,11.68f,0.00f},
+    {294.71f,-4771.76f,11.68f,0.00f},
+    {278.83f,-4724.43f,13.86f,0.00f},
+    {316.66f,-4694.96f,16.66f,0.00f},
+    {369.61f,-4712.72f,23.18f,0.00f},
+    {347.13f,-4706.19f,29.90f,0.00f},
+    {365.07f,-4764.88f,18.14f,0.00f},
+    {365.92f,-4772.48f,17.82f,0.00f},
+    {315.90f,-4773.03f,27.70f,0.00f},
+    {300.71f,-4774.68f,27.70f,0.00f},
+    {272.24f,-4707.53f,22.89f,0.00f},
+    {276.32f,-4714.58f,17.94f,0.00f},
+    {329.32f,-4697.73f,30.97f,0.00f},
+    {326.77f,-4768.21f,16.86f,0.00f},
+    {327.54f,-4668.63f,31.37f,0.00f},
+    {302.49f,-4651.57f,22.22f,0.00f},
+    {305.83f,-4741.89f,14.41f,0.00f},
+    {241.71f,-4749.88f,22.82f,0.00f}, // AREA2
+};
+
+enum HalloweenFireEvents
+{
+    EVENT_FIRE_NONE,
+    EVENT_FIRE_START,
+    EVENT_FIRE_HIT_BY_BUCKET,
+    EVENT_FIRE_VISUAL_WATER,
+    EVENT_FIRE_GROW_FIRE,
+    EVENT_FIRE_FINISH,
+};
+
+class spell_halloween_wand : public SpellScriptLoader
+{
+public:
+    spell_halloween_wand() : SpellScriptLoader("spell_halloween_wand") {}
+
+    class spell_halloween_wand_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_halloween_wand_SpellScript)
+
+        bool Validate(SpellInfo const* /*spellEntry*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_PIRATE_COSTUME_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_PIRATE_COSTUME_FEMALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_NINJA_COSTUME_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_NINJA_COSTUME_FEMALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_LEPER_GNOME_COSTUME_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_LEPER_GNOME_COSTUME_FEMALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_GHOST_COSTUME_MALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_GHOST_COSTUME_FEMALE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_PIRATE))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_NINJA))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_LEPER_GNOME))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_RANDOM))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_SKELETON))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_WISP))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_GHOST))
+                return false;
+            if (!sSpellMgr->GetSpellInfo(SPELL_HALLOWEEN_WAND_BAT))
+                return false;
+            return true;
+        }
+
+        void HandleScriptEffect()
+        {
+            Unit* caster = GetCaster();
+            Unit* target = GetHitPlayer();
+
+            if (!caster || !target)
+                return;
+
+            uint32 spellId = 0;
+            uint8 gender = target->getGender();
+
+            switch (GetSpellInfo()->Id)
+            {
+                case SPELL_HALLOWEEN_WAND_LEPER_GNOME:
+                    spellId = gender ? SPELL_LEPER_GNOME_COSTUME_FEMALE : SPELL_LEPER_GNOME_COSTUME_MALE;
+                    break;
+                case SPELL_HALLOWEEN_WAND_PIRATE:
+                    spellId = gender ? SPELL_PIRATE_COSTUME_FEMALE : SPELL_PIRATE_COSTUME_MALE;
+                    break;
+                case SPELL_HALLOWEEN_WAND_GHOST:
+                    spellId = gender ? SPELL_GHOST_COSTUME_FEMALE : SPELL_GHOST_COSTUME_MALE;
+                    break;
+                case SPELL_HALLOWEEN_WAND_NINJA:
+                    spellId = gender ? SPELL_NINJA_COSTUME_FEMALE : SPELL_NINJA_COSTUME_MALE;
+                    break;
+                case SPELL_HALLOWEEN_WAND_RANDOM:
+                    spellId = RAND(SPELL_HALLOWEEN_WAND_PIRATE, SPELL_HALLOWEEN_WAND_NINJA, SPELL_HALLOWEEN_WAND_LEPER_GNOME, SPELL_HALLOWEEN_WAND_SKELETON, SPELL_HALLOWEEN_WAND_WISP, SPELL_HALLOWEEN_WAND_GHOST, SPELL_HALLOWEEN_WAND_BAT);
+                    break;
+            }
+            caster->CastSpell(target, spellId, true);
+        }
+
+        void Register()
+        {
+            AfterHit += SpellHitFn(spell_halloween_wand_SpellScript::HandleScriptEffect);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_halloween_wand_SpellScript();
+    }
+};
+
+class spell_toss_stinky_bomb : public SpellScriptLoader
+{
+public:
+    spell_toss_stinky_bomb() : SpellScriptLoader("spell_toss_stinky_bomb") {}
+
+    class spell_toss_stinky_bomb_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_toss_stinky_bomb_SpellScript)
+
+        void HandleScriptEffect(SpellEffIndex effIndex)
+        {
+            Unit* caster = GetCaster();
+
+            if (caster && caster->GetTypeId() == TYPEID_PLAYER)
+                caster->ToPlayer()->KilledMonsterCredit(NPC_STINKY_BOMB_CREDIT, 0);
+        }
+
+        void Register()
+        {
+            OnEffectHit += SpellEffectFn(spell_toss_stinky_bomb_SpellScript::HandleScriptEffect, EFFECT_2, SPELL_EFFECT_SEND_EVENT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_toss_stinky_bomb_SpellScript();
+    }
+};
+
+class spell_clean_stinky_bomb : public SpellScriptLoader
+{
+public:
+    spell_clean_stinky_bomb() : SpellScriptLoader("spell_clean_stinky_bomb") {}
+
+    class spell_clean_stinky_bomb_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_clean_stinky_bomb_SpellScript)
+
+        SpellCastResult CheckIfNearBomb()
+        {
+            Unit* caster = GetCaster();
+
+            if(GameObject* stinky = GetClosestGameObjectWithEntry(caster, GO_STINKY_BOMB_CLOUD, 15.0f))
+                return SPELL_CAST_OK;
+            else
+                return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+        }
+
+        void HandleCleanBombEffect(SpellEffIndex effIndex)
+        {
+            Unit* caster = GetCaster();
+
+            if (GameObject* stinky = GetClosestGameObjectWithEntry(caster, GO_STINKY_BOMB_CLOUD, 15.0f))
+                stinky->RemoveFromWorld();
+        }
+
+        void Register()
+        {
+            OnCheckCast += SpellCheckCastFn(spell_clean_stinky_bomb_SpellScript::CheckIfNearBomb);
+            OnEffectHit += SpellEffectFn(spell_clean_stinky_bomb_SpellScript::HandleCleanBombEffect, EFFECT_1, SPELL_EFFECT_ACTIVATE_OBJECT);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_clean_stinky_bomb_SpellScript();
+    }
+};
+
+class at_wickerman_festival : public AreaTriggerScript
+{
+    public:
+        at_wickerman_festival() : AreaTriggerScript("at_wickerman_festival") {}
+
+        bool OnTrigger(Player* player, AreaTriggerEntry const* /*trigger*/)
+        {
+            player->GroupEventHappens(QUEST_CRASHING_WICKERMAN_FESTIVAL, player);
+            return true;
+        }
+};
+
+#define GOSSIP_WICKERMAN_EMBER "Usar las cenizas como pintura de guerra para la cara" //"Smear the ash on my face like war paint!"
+
+class go_wickerman_ember : public GameObjectScript
+{
+public:
+    go_wickerman_ember() : GameObjectScript("go_wickerman_ember") { }
+
+    bool OnGossipHello(Player* player, GameObject* go)
+    {
+        if (!player->HasAura(SPELL_GRIM_VISAGE))
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_WICKERMAN_EMBER, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(go), go->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* player, GameObject* go, uint32 /*sender*/, uint32 action)
+    {
+        if (action == GOSSIP_ACTION_INFO_DEF)
+            go->CastSpell(player, SPELL_GRIM_VISAGE);
+
+        player->PlayerTalkClass->ClearMenus();
+        player->CLOSE_GOSSIP_MENU();
+        return true;
+    }
+};
+
+class item_water_bucket : public ItemScript
+{
+    public:
+
+        item_water_bucket() : ItemScript("item_water_bucket") { }
+
+        bool OnUse(Player* player, Item* item, SpellCastTargets const& targets)
+        {
+            if (Creature* dummy = player->SummonCreature(NPC_FIRE_DUMMY, targets.GetDst()->GetPositionX(), targets.GetDst()->GetPositionY(), targets.GetDst()->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 500))
+            {
+                std::list<Creature*> firesList;
+                Trinity::AllCreaturesOfEntryInRange checker(dummy, NPC_HEADLESS_FIRE, 3.0f);
+                Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(dummy, firesList, checker);
+                player->VisitNearbyObject(3.0f, searcher);
+
+                if (firesList.empty())
+                {
+                    // Just some extra checks...
+                    Creature* fire = dummy->FindNearestCreature(NPC_HEADLESS_FIRE, 3.0f, true);
+                    if (fire && fire->isAlive())
+                        fire->AI()->SetGUID(player->GetGUID(), EVENT_FIRE_HIT_BY_BUCKET);
+                    else if (Player* friendPlr = dummy->SelectNearestPlayer(3.0f))
+                    {
+                        if (friendPlr->IsFriendlyTo(player) && friendPlr->isAlive())
+                            player->CastSpell(friendPlr, SPELL_CREATE_WATER_BUCKET, true);
+                    }
+                    else
+                        return false;
+                }
+
+                for (std::list<Creature*>::const_iterator i = firesList.begin(); i != firesList.end(); ++i)
+                    if ((*i) && (*i)->isAlive())
+                        (*i)->AI()->SetGUID(player->GetGUID(), EVENT_FIRE_HIT_BY_BUCKET);
+            }
+            return false;
+        }
+};
+
+class npc_halloween_fire : public CreatureScript
+{
+public:
+    npc_halloween_fire() : CreatureScript("npc_halloween_fire") { }
+
+
+    struct npc_halloween_fireAI : public ScriptedAI
+    {
+        npc_halloween_fireAI(Creature* c) : ScriptedAI(c) {}
+
+        bool fireEffigy;
+        bool off;
+        EventMap events;
+        uint64 _playerGUID;
+        std::list<uint64> _playerList;
+
+        void Reset()
+        {
+            off = false;
+            fireEffigy = false;
+            _playerGUID = 0;
+            _playerList.clear();
+            events.Reset();
+            // Mark the npc if is for handling effigy instead of horseman fires
+            if(GameObject* effigy = me->FindNearestGameObject(GO_FIRE_EFFIGY, 0.5f))
+                fireEffigy = true;
+            me->CastSpell(me, SPELL_FIRE_STARTING_SIZE, true);
+            events.ScheduleEvent(EVENT_FIRE_GROW_FIRE, 1000);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            events.Update(diff);
+
+            switch(events.ExecuteEvent())
+            {
+                case EVENT_FIRE_VISUAL_WATER:
+                    me->CastSpell(me, SPELL_WATER_SPOUT_VISUAL, true);
+                    if (fireEffigy)
+                    {
+                        if (GameObject* effigy = me->FindNearestGameObject(GO_FIRE_EFFIGY, 0.5f))
+                        {
+                            effigy->SetGoState(GO_STATE_READY);
+                            if (Player* player = me->GetPlayer(*me, _playerGUID))
+                                player->KilledMonsterCredit(me->GetEntry(),0);
+                            events.ScheduleEvent(EVENT_FIRE_GROW_FIRE, 22000);
+                        }
+                    } else {
+                        if (Aura* fireSize = me->GetAura(SPELL_FIRE_SIZE_STACK))
+                        {
+                            if (fireSize->GetStackAmount() < 5)
+                            {
+                                me->RemoveAura(fireSize);
+                                me->RemoveAurasDueToSpell(SPELL_FIRE_VISUAL_BUFF);
+                                off = true;
+                            } else
+                                fireSize->ModStackAmount(-5);
+                        }
+                    }
+                    break;
+                case EVENT_FIRE_GROW_FIRE:
+                    if (fireEffigy)
+                    {
+                        if (GameObject* effigy = me->FindNearestGameObject(GO_FIRE_EFFIGY, 0.5f))
+                            effigy->SetGoState(GO_STATE_ACTIVE);
+                    } else {
+                        if (off) break; // This fire have been extinguished
+
+                        if (!me->HasAura(SPELL_FIRE_STARTING_SIZE))
+                            me->CastSpell(me, SPELL_FIRE_STARTING_SIZE, true);
+                        if (!me->HasAura(SPELL_FIRE_VISUAL_BUFF))
+                            me->CastSpell(me, SPELL_FIRE_VISUAL_BUFF, true);
+                        me->CastSpell(me, SPELL_FIRE_SIZE_STACK, true);
+                        events.ScheduleEvent(EVENT_FIRE_GROW_FIRE, urand(1000,2500));
+                    }
+                    break;
+                case EVENT_FIRE_FINISH:
+                    // Credit all players who helped out with this fire
+                    for (std::list<uint64>::const_iterator i = _playerList.begin(); i != _playerList.end(); ++i)
+                    {
+                        Player* player = me->GetPlayer(*me, *i);
+                        if (player && player->GetAreaId() == me->GetAreaId())
+                            player->CastSpell(player, SPELL_QUESTS_CREDITS, true);
+                    }
+                    me->DespawnOrUnsummon();
+                    break;
+
+            }
+        }
+
+        void DoAction(int32 const action)
+        {
+            if (action == EVENT_FIRE_FINISH)
+                events.ScheduleEvent(EVENT_FIRE_FINISH, 0);
+        }
+
+        void SetGUID(uint64 guid, int32 id)
+        {
+            if (off) return;
+
+            if (id == EVENT_FIRE_HIT_BY_BUCKET)
+            {
+                _playerGUID = guid;
+                if (fireEffigy)
+                {
+                    if (GameObject* effigy = me->FindNearestGameObject(GO_FIRE_EFFIGY, 0.5f))
+                        if (effigy->GetGoState() == GO_STATE_ACTIVE)
+                            events.ScheduleEvent(EVENT_FIRE_VISUAL_WATER, 1000);
+                } else
+                {
+                    events.ScheduleEvent(EVENT_FIRE_VISUAL_WATER, 1000);
+                    _playerList.push_back(_playerGUID);
+                    _playerList.unique();
+                }
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_halloween_fireAI(creature);
+    }
+};
+
+/* This should be fixed ASAP, as far as I know, HHman should appear flying on villages and
+start casting SPELL_FIRE_CREATE_NODE on their buildings, maybe also son zone warning, also need
+to fix the quests, there are 2 aviable now, when only one should be depending if the village is
+alreade setted on fire or nor.
+*/
+class npc_halloween_fire_summoner : public CreatureScript
+{
+public:
+    npc_halloween_fire_summoner() : CreatureScript("npc_halloween_fire_summoner") { }
+
+
+    struct npc_halloween_fire_summonerAI : public ScriptedAI
+    {
+        npc_halloween_fire_summonerAI(Creature* c) : ScriptedAI(c), fires(c) {}
+
+        SummonList fires;
+        EventMap events;
+
+        void Reset()
+        {
+            events.ScheduleEvent(EVENT_FIRE_START, 30*MINUTE, 2*HOUR);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            events.Update(diff);
+
+            switch(events.ExecuteEvent())
+            {
+                case EVENT_FIRE_START:
+                    //me->CastSpell(FireNodes[i].GetPositionX(), FireNodes[i].GetPositionY(), FireNodes[i].GetPositionZ(), SPELL_FIRE_CREATE_NODE, true);
+                    for (uint32 i = 0; i<=FIRE_NODES_COUNT; i++)
+                        if (Creature* fire = me->SummonCreature(NPC_HEADLESS_FIRE, FireNodes[i].GetPositionX(), FireNodes[i].GetPositionY(), FireNodes[i].GetPositionZ()))
+                            fires.Summon(fire);
+
+                    events.ScheduleEvent(EVENT_FIRE_FINISH, 3*MINUTE, 5*MINUTE);
+                    break;
+                case EVENT_FIRE_FINISH:
+                    fires.DoAction(0, EVENT_FIRE_FINISH);
+                    events.ScheduleEvent(EVENT_FIRE_START, 30*MINUTE, 2*HOUR);
+                    break;
+            }
+        }
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_halloween_fire_summonerAI(creature);
+    }
+};
+
 void AddSC_custom_fixes()
 {
     new go_not_a_bug;
@@ -3792,4 +4309,12 @@ void AddSC_custom_fixes()
     new npc_dark_iron_guzzler();
     new at_brewfest();
     new go_mistwhisper_treasure();
+    new spell_toss_stinky_bomb();
+    new spell_clean_stinky_bomb();
+    new at_wickerman_festival();
+    new spell_halloween_wand();
+    new go_wickerman_ember();
+    new item_water_bucket();
+    new npc_halloween_fire();
+    new npc_halloween_fire_summoner();
 }
