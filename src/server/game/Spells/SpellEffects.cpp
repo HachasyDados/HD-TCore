@@ -1662,7 +1662,7 @@ void Spell::EffectTriggerSpell(SpellEffIndex effIndex)
                 return;
             }
             // Righteous Defense
-            case 31980:
+            case 31789:
             {
                 m_caster->CastSpell(unitTarget, 31790, true);
                 return;
