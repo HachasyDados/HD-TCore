@@ -358,12 +358,12 @@ void WardenWin::HandleData(ByteBuffer &buff)
     _dataSent = false;
     _clientResponseTimer = 0;
 
-    // DEBUG CODE
+    /* DEBUG CODE
     if (_requestSent < time(NULL) - 30)
     {
         sLog->outError("WARDEN: Player %s (guid: %u, account: %u) took %s to respond to warden check request",
             _session->GetPlayerName(), _session->GetGuidLow(), _session->GetAccountId(), secsToTimeString(uint32(time(NULL)- _requestSent), true).c_str());
-    }
+    }*/
 
     uint16 Length;
     buff >> Length;
