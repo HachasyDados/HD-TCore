@@ -4446,6 +4446,9 @@ public:
 
     bool OnQuestAccept(Player* /*player*/, Creature* me, Quest const* quest)
     {
+        if (!(me->GetAreaId() == 87 || me->GetAreaId() == 362))
+            return true;
+
         if (quest->GetQuestId() == QUEST_LET_THE_FIRES_COME_A || quest->GetQuestId() == QUEST_LET_THE_FIRES_COME_H)
         {
             Creature* horseman = me->GetCreature(*me, _headlessHoresemanGUID);
