@@ -145,7 +145,7 @@ void Warden::Update()
                     sLog->outError("WARDEN: Player %s (guid: %u, account: %u, latency: %u, IP: %s) exceeded Warden module response delay for more than %s - disconnecting client",
                                    _session->GetPlayerName(), _session->GetGuidLow(), _session->GetAccountId(), _session->GetLatency(), _session->GetRemoteAddress().c_str(),
                                    secsToTimeString(maxClientResponseDelay, true).c_str());
-                    _session->KickPlayer();
+                    // _session->KickPlayer();
                 }
                 else
                     _clientResponseTimer += diff;
