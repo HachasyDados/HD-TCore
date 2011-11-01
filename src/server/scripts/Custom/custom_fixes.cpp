@@ -4269,7 +4269,10 @@ public:
             if (moving && id < FIRE_NODES_PER_AREA)
             {
                 if (id == 0 && !allFiresSet)
+                {
+                    sLog->outBasic("HEADLESS HORSEMAN BUG TRACKING Area %u.", me->GetAreaId());
                     Talk(SAY_HORSEMAN_SPAWN);
+                }
 
                 if (!allFiresSet)
                 {
@@ -4495,7 +4498,7 @@ public:
         return true;
     }
 
-    bool OnQuestAccept(Player* /*player*/, Creature* me, Quest const* quest)
+    bool OnQuestAccept(Player* player, Creature* me, Quest const* quest)
     {
         if (!(me->GetAreaId() == 87 || me->GetAreaId() == 362))
             return true;
@@ -4506,8 +4509,9 @@ public:
 
             if (!horseman)
             {
-                if (Creature* horseman = me->SummonCreature(NPC_SHADE_HORSEMAN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 20.0f, 0, TEMPSUMMON_DEAD_DESPAWN, 180000))
-                    _headlessHoresemanGUID = horseman->GetGUID();
+                sLog->outBasic("HEADLESS HORSEMAN BUG TRACKING. SUMMON: GUID Player: %u. Area %u.", player->GetGUID(), player->GetAreaId());
+                if (Creature* newHorseman = player->SummonCreature(NPC_SHADE_HORSEMAN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 20.0f, 0, TEMPSUMMON_DEAD_DESPAWN, 180000))
+                    _headlessHoresemanGUID = newHorseman->GetGUID();
             }
         }
         return true;
