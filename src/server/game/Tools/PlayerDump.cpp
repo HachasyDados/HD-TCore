@@ -660,6 +660,14 @@ DumpReturn PlayerDumpReader::LoadDump(const std::string& file, uint32 account, s
     if (incHighest)
         ++sObjectMgr->m_hiCharGuid;
 
+    QueryResult newresult = CharacterDatabase.PQuery("SELECT guid, name, race, gender, class FROM characters WHERE guid = '%u'", guid);
+    if (newresult)
+    {
+        Field *fields = newresult->Fetch();
+        sWorld->AddCharacterNameData(fields[0].GetUInt32(), fields[1].GetString(),
+            fields[3].GetUInt8() /*gender*/, fields[2].GetUInt8() /*race*/, fields[4].GetUInt8() /*class*/);
+    }
+
     fclose(fin);
 
     return DUMP_SUCCESS;
