@@ -849,10 +849,11 @@ class spell_oculus_rider_aura : public SpellScriptLoader
             void HandleOnEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
                 Unit* caster = GetCaster();
-                Creature* drake = caster->GetCreature(*GetCaster(), _drakeGUID);
 
                 if(!caster)
                     return;
+
+                Creature* drake = caster->GetCreature(*caster, _drakeGUID);
 
                 if(drake)
                 {
