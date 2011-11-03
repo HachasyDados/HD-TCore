@@ -1,0 +1,8 @@
+DELETE FROM `locales_item` WHERE (`entry`=52022);
+INSERT INTO `locales_item` (`entry`, `name_loc6`, `name_loc7`, `description_loc6`, `description_loc7`) VALUES (52022,'Diseño: Balas Destrozadoras','Diseño: Balas Destrozadoras','','');
+
+DELETE FROM `locales_item` WHERE (`entry`=52023);
+INSERT INTO `locales_item` (`entry`, `name_loc6`, `name_loc7`, `description_loc6`, `description_loc7`) VALUES (52023,'Diseño: Flecha de hoja de hielo','Diseño: Flecha de hoja de hielo','','');
+
+DELETE FROM `locales_item` WHERE (`entry`=16051);
+INSERT INTO `locales_item` (`entry`, `name_loc6`, `name_loc7`, `description_loc6`, `description_loc7`) VALUES (16051,'Esquema: Proyectiles de torio','Esquema: Proyectiles de torio','','');
