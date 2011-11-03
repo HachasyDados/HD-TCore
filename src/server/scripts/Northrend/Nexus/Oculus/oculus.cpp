@@ -270,16 +270,6 @@ public:
 
             DoMeleeAttackIfReady();
         }
-
-        void DamageTaken(Unit* attacker, uint32 & /*damage*/)
-        {
-            if(attacker)
-            {
-                Unit* player = attacker->GetCharmer();
-                if(player && !player->isInCombat())
-                    player->SetInCombatWith(me);
-            }
-        }
     };
     CreatureAI* GetAI(Creature* creature) const
     {
@@ -316,16 +306,6 @@ public:
                 DoCast(IsHeroic() ? H_SPELL_CHARGED_SKIN : SPELL_CHARGED_SKIN);
 
             DoMeleeAttackIfReady();
-        }
-
-        void DamageTaken(Unit* attacker, uint32 & /*damage*/)
-        {
-            if(attacker)
-            {
-                Unit* player = attacker->GetCharmer();
-                if(player && !player->isInCombat())
-                    player->SetInCombatWith(me);
-            }
         }
     };
     CreatureAI* GetAI(Creature* creature) const
@@ -386,16 +366,6 @@ public:
 
             chasing = on;
 
-        }
-
-        void DamageTaken(Unit* attacker, uint32 & /*damage*/)
-        {
-            if(attacker)
-            {
-                Unit* player = attacker->GetCharmer();
-                if(player && !player->isInCombat())
-                    player->SetInCombatWith(me);
-            }
         }
     };
     CreatureAI* GetAI(Creature* creature) const
@@ -506,7 +476,7 @@ class spell_oculus_shock_lance : public SpellScriptLoader
 
                 if(Aura* shockCharges = GetTargetUnit()->GetAura(SPELL_SHOCK_CHARGE, GetCaster()->GetGUID()))
                 {
-                    uint32 baseDamage = shockCharges->GetSpellInfo()->Effects[0].BasePoints;
+                    uint32 baseDamage = GetHitDamage();
                     uint32 chargeNumber = shockCharges->GetStackAmount();
                     damageFromCharges = baseDamage*chargeNumber;
                 }
@@ -641,18 +611,17 @@ class spell_oculus_touch_nightmare : public SpellScriptLoader
         {
             PrepareSpellScript(spell_oculus_touch_nightmareSpellScript)
 
-            void HandleDamage(SpellEffIndex /*effIndex*/)
+            void HandleSelfDamage()
             {
-                uint32 damage = 0;
-
-                damage = (double) (GetCaster()->GetMaxHealth()) * 0.30;
-
-                SetHitDamage(damage);
+                // Since BeforeHit is launched for every Effect, we filter only the self damage effect
+                // wich has 1 as basepoints for damage
+                if (GetHitDamage() == 1)
+                    SetHitDamage((GetCaster()->GetMaxHealth()*0.3f));
             }
 
             void Register()
             {
-                OnEffectHit += SpellEffectFn(spell_oculus_touch_nightmareSpellScript::HandleDamage, EFFECT_2, SPELL_EFFECT_SCHOOL_DAMAGE);
+                BeforeHit += SpellHitFn(spell_oculus_touch_nightmareSpellScript::HandleSelfDamage);
             }
         };
 
@@ -797,27 +766,6 @@ class spell_oculus_rider_aura : public SpellScriptLoader
 
             uint64 _drakeGUID;
 
-            bool CheckRequirement(Unit* /*target*/)
-            {
-                Unit* caster = GetCaster();
-
-                if(!caster)
-                    return false;
-
-                if(InstanceScript* instance = caster->GetInstanceScript())
-                    if(instance->GetBossState(DATA_EREGOS_EVENT) == IN_PROGRESS || instance->GetBossState(DATA_EREGOS_EVENT) == DONE)
-                        return true;
-
-                if (caster->isInCombat())
-                {
-                    caster->RemoveAurasDueToSpell(GetId());
-                    caster->ExitVehicle();
-                    return false;
-                }
-
-                return true;
-            }
-
             void HandleOnEffectApply(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
             {
                 Unit* caster = GetCaster();
@@ -849,10 +797,11 @@ class spell_oculus_rider_aura : public SpellScriptLoader
             void HandleOnEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
                 Unit* caster = GetCaster();
-                Creature* drake = caster->GetCreature(*GetCaster(), _drakeGUID);
 
                 if(!caster)
                     return;
+
+                Creature* drake = caster->GetCreature(*caster, _drakeGUID);
 
                 if(drake)
                 {
@@ -869,7 +818,6 @@ class spell_oculus_rider_aura : public SpellScriptLoader
 
             void Register()
             {
-                DoCheckAreaTarget += AuraCheckAreaTargetFn(spell_oculus_rider_auraAuraScript::CheckRequirement);
                 OnEffectApply += AuraEffectApplyFn(spell_oculus_rider_auraAuraScript::HandleOnEffectApply, EFFECT_1, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL_OR_REAPPLY_MASK);
                 OnEffectApply += AuraEffectApplyFn(spell_oculus_rider_auraAuraScript::HandleOnEffectApply, EFFECT_2, SPELL_AURA_LINKED, AURA_EFFECT_HANDLE_REAL_OR_REAPPLY_MASK);
                 OnEffectRemove += AuraEffectRemoveFn(spell_oculus_rider_auraAuraScript::HandleOnEffectRemove, EFFECT_1, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL_OR_REAPPLY_MASK);
@@ -894,10 +842,11 @@ class spell_oculus_drake_flag : public SpellScriptLoader
             void HandleOnEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
                 Unit* caster = GetCaster();
-                Creature* drake = caster->GetVehicleCreatureBase();
 
                 if(!caster)
                     return;
+
+                Creature* drake = caster->GetVehicleCreatureBase();
 
                 if(!drake)
                 {

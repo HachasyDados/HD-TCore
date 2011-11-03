@@ -3006,6 +3006,13 @@ void SpellMgr::LoadDbcDataCorrections()
             case 36350: //They Must Burn Bomb Aura (self)
                 spellInfo->EffectTriggerSpell[0] = 36325; // They Must Burn Bomb Drop (DND)
                 break;
+            case 49840: // Shock Lance
+            case 49592: // Temporal rift
+            case 50328: // Leeching poison
+            case 50341: // Touch the nightmare
+            case 50344: // Dream Funnel
+            case 50232: // Searing Wrath
+                spellInfo->TargetCreatureType = CREATURE_TYPE_DRAGONKIN;
             case 49838: // Stop Time
                 spellInfo->AttributesEx3 |= SPELL_ATTR3_NO_INITIAL_AGGRO;
                 break;
